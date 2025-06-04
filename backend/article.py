@@ -2,12 +2,14 @@
 Thomas De Sa - 2025-06-04
 """
 
-import spacy
+import requests
 from ethics_categories import ETHICS_CATEGORIES
-nlp = spacy.load("en_core_web_sm")
+from config import API_KEY
 
 class Article:
 
+    GNEWS_ENDPOINT = "https://gnews.io/api/v4/search"
+    
     def __init__(self, company: str, headline: str, url: str, source: str, categories: list[str], date_published:str):
         """Initalize Article object
 
@@ -26,28 +28,19 @@ class Article:
         self.categories = categories
         self.date_published = date_published
         
-    def get_articles(company:str):
-        pass
+    def get_articles(company:str, category:str, session:requests.Session = None):
+        category = category.lower()
+        if category not in ETHICS_CATEGORIES.keys() and category != "all":
+            print("Invalid category")
         
-    def categorize(headline:str):
-        """Static function. 
-        Tokenizes headline then categorizes article based on keyword matching.
-        See ethics_categories.py
-
-        Args:
-            headline (str): Article headline
-
-        Returns:
-            list: array of categories article matched (see ETHICS_CATEGORIES dict)
-        """
-        doc = nlp(headline.lower())
-        tokens = [token.text for token in doc]
         
-        categories = []
-        for category, keywords in ETHICS_CATEGORIES.items():
-            for keyword in keywords:
-                if any(keyword in token for token in tokens):
-                    categories.append(category)
-                    break
-                
-        return categories or ["uncategorized"]
+        query = f'"{company}" AND ({category} OR {" OR ".join(ETHICS_CATEGORIES[category])})'
+        print(query)
+        print(len(query))
+        
+        # if session: pass
+        
+        # else:
+        #     requests.get(Article.GNEWS_ENDPOINT + f'?q=apikey={API_KEY}')
+
+        return 
