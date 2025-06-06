@@ -29,18 +29,39 @@ class Article:
         self.date_published = date_published
         
     def get_articles(company:str, category:str, session:requests.Session = None):
+        """Get articles form GNEWS API relating to a specific company and ethical category
+
+        Args:
+            company (str): Name of company
+            category (str): Ethical category (relating to keys of ETHICAL_CATEGORIES dict. ethics_categories.py)
+            session (requests.Session, optional): Requests session. Defaults to None.
+        
+        return:
+            json ()
+        """
         category = category.lower()
+        json = None
+        gen = False
+        
         if category not in ETHICS_CATEGORIES.keys() and category != "all":
             print("Invalid category")
         
-        
-        query = f'"{company}" AND ({category} OR {" OR ".join(ETHICS_CATEGORIES[category])})'
-        print(query)
-        print(len(query))
-        
-        # if session: pass
-        
-        # else:
-        #     requests.get(Article.GNEWS_ENDPOINT + f'?q=apikey={API_KEY}')
-
-        return 
+        else: 
+            #generate GNEWS API query. Doumentation here: https://gnews.io/docs/v4?python#search-endpoint
+            query = f'"{company}" AND ({category} OR {" OR ".join(ETHICS_CATEGORIES[category])})'
+            
+            if not session:
+                gen = True
+                session = requests.Session()
+                
+            res = session.get(Article.GNEWS_ENDPOINT + f'?q={query}&lang=en&apikey={API_KEY}')
+            
+            print(f"code: {res.status_code}")
+            
+            if res.json:
+                json = res.json()
+            
+            if gen:
+                session.close()
+            
+        return json, res.status_code
