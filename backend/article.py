@@ -29,7 +29,7 @@ class Article:
         self.date_published = date_published
         
     def get_articles(company:str, category:str, session:requests.Session = None):
-        """Get articles form GNEWS API relating to a specific company and ethical category
+        """Static function. Get articles form GNEWS API relating to a specific company and ethical category
 
         Args:
             company (str): Name of company
@@ -63,5 +63,7 @@ class Article:
             
             if gen:
                 session.close()
-            
+        
+        #TODO
+        #Convert list of json Article objects to python Article objects, return list of Article objects
         return json, res.status_code
