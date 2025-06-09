@@ -1,3 +1,5 @@
 backend/config.py
+backend/util/db_config.py
 backend/article_testing.py
-backend/__pycache__
+
+__pycache__/
