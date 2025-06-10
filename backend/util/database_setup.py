@@ -33,7 +33,8 @@ def create_tables():
 def insert_fortune_500():
     """
     Inserts name, description and industry of fortune 500 companies. 
-    It is possible to miss some companies due to timeouts from wikipedia
+    It may miss a few companies because the list does not does not have the same name of the company as
+    wikipedia.
     
     returns - none"""
     fortune_500 = get_fortune_500()
@@ -49,12 +50,21 @@ def insert_fortune_500():
         with connection.cursor() as cursor:
             
             for company in fortune_500:
-                description = get_description(company[1])
+                name = company[1]
+                description, code = get_description(name)
                 
-                if not description:
-                    missed.append(company[1])
-                else: 
-                    cursor.execute(query, (company[1], description, company[2]))
+                #If description not found
+                if code == 404:
+                    time.sleep(.5)
+                    #try removing 'Holdings'
+                    if "Holdings" in name:
+                        description, code = get_description(name[:-8])
+                    else:
+                        description, code = get_description(name + "_(company)")
+
+                
+                if code == 200:
+                    cursor.execute(query, (name, description, company[2]))
                 
                 #don't overwhelm wikipedia
                 time.sleep(1)
@@ -68,6 +78,7 @@ def insert_names():
     Insert names & industry ONLY (no description) of fortune 500 companies
     """
     fortune_500 = get_fortune_500()
+    
     with connect(host=db_host, user=db_user, password=db_pass, database=db_name) as connection:
         print(connection)
         
@@ -75,6 +86,7 @@ def insert_names():
         VALUES (%s, %s)"""
         
         with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM companies WHERE description IS NULL;")
             for company in fortune_500:
                 cursor.execute(query, (company[1], company[2]))
         
@@ -84,10 +96,11 @@ def insert_names():
 
 
 if __name__ == "__main__":
-    # create_tables()
+    #Uncomment this to create database. Will take 15-20 minutes
     
-    # #This will take 15 minutes
+    # create_tables()
     # insert_fortune_500()
     
     insert_names()
+    
     #TODO deal with null descriptions

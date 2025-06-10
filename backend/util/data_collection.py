@@ -21,23 +21,19 @@ def get_description(company: str):
         company (str): Name of company
 
     Returns:
-        description (str): descriptioon of company (from wikipedia)
+        description, status_code (tuple(str, int)): Description of company, status code of request (i.e., 404 page not found). Description is none if page is not found
     """
 
     description = None
+    status_code = None
+    
     try:
-        url = f"https://en.wikipedia.org/wiki/{company}_(company)"
+      
+        url = f"https://en.wikipedia.org/wiki/{company}"
         res = requests.get(url, timeout=10)
         print(f"{company} code: {res.status_code}")
-
-        #If {company}_(company) not found, just search for company
-        if res.status_code == 404:
-            time.sleep(.5)
-            url = f"https://en.wikipedia.org/wiki/{company}"
-            res = requests.get(url, timeout=10)
-            print(f"{company} code: {res.status_code}")
-
-
+        status_code = res.status_code
+        
         if res.status_code == 200:
             soup = BeautifulSoup(res.content, "html.parser")
 
@@ -54,24 +50,25 @@ def get_description(company: str):
                 description = re.sub(r'\(([^()]*\/[^()]*?)\)', '', description)
                 description = re.sub(r'\s{2,}', ' ', description).strip()
 
-    except requests.exceptions.RequestException as e: 
+    except requests.exceptions.RequestException as e:
         print(f"Failed to fetch company {company}")
-        
-    ##TODO
-    #get company logo from wiki
-    return description
+
+    # TODO
+    # get company logo from wiki
+    
+    return description, status_code
 
 
 def get_fortune_500():
-    """Return 2d array of fotune 500 companies from 
+    """Return 2d array of fotune 500 companies from
     "https://sheet2site.com/api/v3/index.php?key=1S-vhiXvvKFDczI6vAK_dZlGqe3ftxNraArOZIVGivGw&g=1&e=1&e=1"
-    
+
     Returns:
         fortune_500 (list[list[str]]): 2d array of fortune 500 companies
     """
     fortune_500 = []
-    
-    #Iframe from https://www.50pros.com/fortune500
+
+    # Iframe from https://www.50pros.com/fortune500
     url = "https://sheet2site.com/api/v3/index.php?key=1S-vhiXvvKFDczI6vAK_dZlGqe3ftxNraArOZIVGivGw&g=1&e=1&e=1"
     res = requests.get(url, timeout=10)
     print(f"code: {res.status_code}")
@@ -79,16 +76,22 @@ def get_fortune_500():
     if res.status_code == 200:
         soup = BeautifulSoup(res.content, "html.parser")
         table = soup.find("tbody")
-        
-        
+
         for row in table.find_all("tr"):
             row_arr = []
             for td in row.find_all("td"):
                 row_arr.append(td.text)
+
+            name = row_arr[1]
             
+            #e.g., Labcorp s => Labcorb Holdings
+            if name[-2:] == " s": 
+                row_arr[1] = name[:-2] + " Holdings"
+                
             fortune_500.append(row_arr)
 
     return fortune_500
+
+
 if __name__ == "__main__":
-    description = get_description("Citi")
-    print(description)
+    pass
