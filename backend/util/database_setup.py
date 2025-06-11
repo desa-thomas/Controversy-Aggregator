@@ -49,6 +49,7 @@ def insert_fortune_500():
             for company in fortune_500:
                 name = company[1]
                 description = get_company_description()
+                #description may be null
                 cursor.execute(query, (name, description, company[2]))
                 
                 #don't overwhelm wikipedia

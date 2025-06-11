@@ -1,7 +1,11 @@
 """
 Thomas De Sa 2025-06-05
 
-Company data collection functions"""
+Company data collection functions
+
+wikidata API docs: https://www.mediawiki.org/wiki/API:Main_page
+Thank you wikidata !
+"""
 
 import time
 from bs4 import BeautifulSoup
@@ -15,7 +19,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 
 def get_description(company: str):
-    """Scrape company description from wikipedia (description, logo)
+    """Scrape company description from wikipedia (first paragraph)
 
     Args:
         company (str): Name of company
@@ -28,66 +32,90 @@ def get_description(company: str):
 
     description = None
     status_code = None
-    
-    try:
-      
-        url = f"https://en.wikipedia.org/wiki/{company}"
-        res = requests.get(url, timeout=10)
-        print(f"{company} code: {res.status_code}")
-        status_code = res.status_code
-        
-        if res.status_code == 200:
-            soup = BeautifulSoup(res.content, "html.parser")
+    url = get_wikipedia_url(company)
 
-            content_div = soup.find(
-                "div", {"class": "mw-content-ltr mw-parser-output"})
-            description = content_div.find("p", {"class": ""})
+    if url:
+        try:
+            res = requests.get(url, timeout=10)
+            print(f"{company} code: {res.status_code}")
+            status_code = res.status_code
+            
+            if res.status_code == 200:
+                soup = BeautifulSoup(res.content, "html.parser")
 
-            # Paragraph found
-            if description is not None:
-                description = description.get_text()
+                content_div = soup.find(
+                    "div", {"class": "mw-content-ltr mw-parser-output"})
+                description = content_div.find("p", {"class": ""})
 
-                # remove citations brackets ([9]) and pronounciation
-                description = re.sub(r'\[\d+\]', '', description)
-                description = re.sub(r'\(([^()]*\/[^()]*?)\)', '', description)
-                description = re.sub(r'\s{2,}', ' ', description).strip()
+                # Paragraph found
+                if description is not None:
+                    description = description.get_text()
 
-    except requests.exceptions.RequestException as e:
-        print(f"Failed to fetch company {company}")
+                    # remove citations brackets ([9]) and pronounciation
+                    description = re.sub(r'\[\d+\]', '', description)
+                    description = re.sub(r'\(([^()]*\/[^()]*?)\)', '', description)
+                    description = re.sub(r'\s{2,}', ' ', description).strip()
 
-    # TODO
-    # get company logo from wiki
+        except requests.exceptions.RequestException as e:
+            print(f"Failed to fetch company {company}")
     
     return description, status_code
 
-def get_company_description(name: str):
-    """ Does a more through search for a company's description. 
-    Wrapper for get_description which tries searching for company trying multiple names
+def get_company_description(company:str):
+    """Get a companys description from wikipedia
+
+    Wrapper function of `get_description` that only returns description. Made it so I don't accidently break other stuff lol
+    
+    Args:
+        company (str): name of company
+
+    Returns:
+        str: company description
+    """
+    description, code = get_description(company)
+    return description
+
+def get_wikipedia_url(company_name:str, lang="en"):
+    """Get wikipedia url using wikidata api. 
+    
+    Uses the wikidata search api to search for the company then return is corresponding sitelink. 
+    Helpful because sometimes the sitelink is different from just /wiki/company_name
 
     Args:
-        name (str): name of company 
-    
-    returns:
-        description (str): description of company. None if not found
+        company_name (str): name of company
+        lang (str, optional): language. Defaults to "en".
+
+    Returns:
+        str: url to wikipedia page. None if not found
     """
-    description, code = get_description(name + " company")
-                
-    #If description not found
-    if code == 404:
-        time.sleep(.5)
-        description, code = get_description(name)
-        
-        #try removing holdings
-        if code == 404 and "Holdings" in name:
-            time.sleep(.5)
-            description, code = get_description(name[:-8])
+    wiki_url = None
+    
+    search_url = "https://www.wikidata.org/w/api.php"
+    params = {
+        "action": "wbsearchentities",
+        "search": company_name,
+        "language": lang,
+        "format": "json"
+    }
+    response = requests.get(search_url, params=params).json()
+    
+    if not response["search"]:
+        return None
+    
+    qid = response["search"][0]["id"]
 
-        #try adding group
-        if code == 404:
-            time.sleep(.5)
-            description, code = get_description(name + " Group")
+    #get data using qid
+    entity_url = f"https://www.wikidata.org/wiki/Special:EntityData/{qid}.json"
+    entity_data = requests.get(entity_url).json()
+    sitelinks = entity_data["entities"][qid].get("sitelinks", {})
 
-    return description
+    wiki_key = f"{lang}wiki"
+    
+    if wiki_key in sitelinks:
+        wiki_url = sitelinks[wiki_key]["url"]
+    
+    return wiki_url
+    
 
 def get_fortune_500():
     """Return 2d array of fotune 500 companies from
@@ -122,6 +150,39 @@ def get_fortune_500():
 
     return fortune_500
 
+def get_aliases(name: str):
+    """Get aliases of a company using wikidata API
+
+    Args:
+        name (str): name of company
+
+    Returns:
+        list[str]: list of aliases
+    """
+    
+    search_url = "https://www.wikidata.org/w/api.php"
+    params = {
+        "action": "wbsearchentities",
+        "search": name,
+        "language": "en",
+        "format": "json"
+    }
+    
+    res = requests.get(search_url, params=params).json()
+    #use first result
+    entity_id = res["search"][0]["id"]  
+
+    # Step 2: Get full entity data
+    entity_url = f"https://www.wikidata.org/wiki/Special:EntityData/{entity_id}.json"
+    entity_data = requests.get(entity_url).json()
+    entity = entity_data["entities"][entity_id]
+
+    aliases = [alias["value"] for alias in entity.get("aliases", {}).get("en", [])]
+
+    return aliases
+
+
 
 if __name__ == "__main__":
+    print(get_aliases("alphabet"))
     pass
