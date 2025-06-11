@@ -6,7 +6,7 @@ Run as a module from /backend: `python -m util.database_setup` for import resolu
 import time
 from mysql.connector import connect, Error
 from config import db_host, db_pass, db_user, db_name
-from data_collection import get_fortune_500, get_description
+from data_collection import get_fortune_500, get_company_description
 
 def create_tables():
     """
@@ -40,10 +40,7 @@ def insert_fortune_500():
     fortune_500 = get_fortune_500()
     with connect(host=db_host, user=db_user, password=db_pass, database=db_name) as connection:
         print(connection)
-        
-        #array will contain companies which failed to get description on
-        missed = []
-        
+
         query = f"""INSERT INTO companies (name,description, industry)
         VALUES (%s, %s, %s)"""
         
@@ -51,26 +48,13 @@ def insert_fortune_500():
             
             for company in fortune_500:
                 name = company[1]
-                description, code = get_description(name)
-                
-                #If description not found
-                if code == 404:
-                    time.sleep(.5)
-                    #try removing 'Holdings'
-                    if "Holdings" in name:
-                        description, code = get_description(name[:-8])
-                    else:
-                        description, code = get_description(name + "_(company)")
-
-                
-                if code == 200:
-                    cursor.execute(query, (name, description, company[2]))
+                description = get_company_description()
+                cursor.execute(query, (name, description, company[2]))
                 
                 #don't overwhelm wikipedia
                 time.sleep(1)
+                
         connection.commit()
-
-    #TODO do something with missed arr
     return None
 
 def insert_names(): 
@@ -96,11 +80,7 @@ def insert_names():
 
 
 if __name__ == "__main__":
-    #Uncomment this to create database. Will take 15-20 minutes
-    
+    #Uncomment this and run script to create database. Will take 15-20 minutes    
     # create_tables()
     # insert_fortune_500()
-    
-    insert_names()
-    
-    #TODO deal with null descriptions
+    pass

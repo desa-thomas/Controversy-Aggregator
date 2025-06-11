@@ -21,7 +21,9 @@ def get_description(company: str):
         company (str): Name of company
 
     Returns:
-        description, status_code (tuple(str, int)): Description of company, status code of request (i.e., 404 page not found). Description is none if page is not found
+        description (str): Description of company
+        
+        Status_code (int): Status code of request to wikipedia (200, 404, etc)
     """
 
     description = None
@@ -58,6 +60,34 @@ def get_description(company: str):
     
     return description, status_code
 
+def get_company_description(name: str):
+    """ Does a more through search for a company's description. 
+    Wrapper for get_description which tries searching for company trying multiple names
+
+    Args:
+        name (str): name of company 
+    
+    returns:
+        description (str): description of company. None if not found
+    """
+    description, code = get_description(name + " company")
+                
+    #If description not found
+    if code == 404:
+        time.sleep(.5)
+        description, code = get_description(name)
+        
+        #try removing holdings
+        if code == 404 and "Holdings" in name:
+            time.sleep(.5)
+            description, code = get_description(name[:-8])
+
+        #try adding group
+        if code == 404:
+            time.sleep(.5)
+            description, code = get_description(name + " Group")
+
+    return description
 
 def get_fortune_500():
     """Return 2d array of fotune 500 companies from
