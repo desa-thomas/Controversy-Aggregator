@@ -43,19 +43,36 @@ def get_description(company: str):
             if res.status_code == 200:
                 soup = BeautifulSoup(res.content, "html.parser")
 
-                content_div = soup.find(
-                    "div", {"class": "mw-content-ltr mw-parser-output"})
-                description = content_div.find("p", {"class": ""})
-
+                content_div = soup.find("div", {"class": "mw-content-ltr mw-parser-output"})
+                description = content_div.find("p", {"class": ""},recursive=False)
+                
+                if not description: 
+                    description = content_div.find("p", {"class": ""},recursive=True)
+                    
                 # Paragraph found
                 if description is not None:
-                    description = description.get_text()
+                    description = description.get_text().strip()
+                    
+                    #If wiki page has the coordinates listed first
+                    if description[0].isdigit():
+                        ps = content_div.find_all("p", {"class": ""},recursive=False)
+                        #Edge case if coordinate and desc are in the same <p>
+                        if len(ps) == 1:
+                            lines = description.split('\n')
+                            del lines[0]  # removes second line (index 1)
+                            result = '\n'.join(lines)
+                            description = result
+                        else:
+                            description = ps[1]
+                            description = description.get_text()
+                            
 
                     # remove citations brackets ([9]) and pronounciation
                     description = re.sub(r'\[\d+\]', '', description)
                     description = re.sub(r'\(([^()]*\/[^()]*?)\)', '', description)
                     description = re.sub(r'\s{2,}', ' ', description).strip()
 
+                    
         except requests.exceptions.RequestException as e:
             print(f"Failed to fetch company {company}")
     
@@ -90,30 +107,19 @@ def get_wikipedia_url(company_name:str, lang="en"):
     """
     wiki_url = None
     
-    search_url = "https://www.wikidata.org/w/api.php"
-    params = {
-        "action": "wbsearchentities",
-        "search": company_name,
-        "language": lang,
-        "format": "json"
-    }
-    response = requests.get(search_url, params=params).json()
+    qid = get_qid(company_name)
     
-    if not response["search"]:
-        return None
-    
-    qid = response["search"][0]["id"]
+    if qid:
+        #get data using qid
+        entity_url = f"https://www.wikidata.org/wiki/Special:EntityData/{qid}.json"
+        entity_data = requests.get(entity_url).json()
+        sitelinks = entity_data["entities"][qid].get("sitelinks", {})
 
-    #get data using qid
-    entity_url = f"https://www.wikidata.org/wiki/Special:EntityData/{qid}.json"
-    entity_data = requests.get(entity_url).json()
-    sitelinks = entity_data["entities"][qid].get("sitelinks", {})
-
-    wiki_key = f"{lang}wiki"
-    
-    if wiki_key in sitelinks:
-        wiki_url = sitelinks[wiki_key]["url"]
-    
+        wiki_key = f"{lang}wiki"
+        
+        if wiki_key in sitelinks:
+            wiki_url = sitelinks[wiki_key]["url"]
+        
     return wiki_url
     
 
@@ -144,7 +150,7 @@ def get_fortune_500():
             
             #e.g., Labcorp s => Labcorb Holdings
             if name[-2:] == " s": 
-                row_arr[1] = name[:-2] + " Holdings"
+                row_arr[1] = name[:-2]
                 
             fortune_500.append(row_arr)
 
@@ -160,17 +166,7 @@ def get_aliases(name: str):
         list[str]: list of aliases
     """
     
-    search_url = "https://www.wikidata.org/w/api.php"
-    params = {
-        "action": "wbsearchentities",
-        "search": name,
-        "language": "en",
-        "format": "json"
-    }
-    
-    res = requests.get(search_url, params=params).json()
-    #use first result
-    entity_id = res["search"][0]["id"]  
+    entity_id = get_qid(name) 
 
     # Step 2: Get full entity data
     entity_url = f"https://www.wikidata.org/wiki/Special:EntityData/{entity_id}.json"
@@ -181,8 +177,88 @@ def get_aliases(name: str):
 
     return aliases
 
+def get_qid(name:str):
+    """Get qid from wikidata api: "https://www.wikidata.org/w/api.php"
 
+    Args:
+        name (str): name of company (or otherwise) to get id of
+        
+    return:
+        str: qid of search. None if nothing was found
+    """
+    
+    qid = None
+    keywords = ["company", "business", "organization", "conglomerate", "group", "corporation", "platform",
+                "firm", "brand", "manufacturer"]
+    
+    company_suffixs = ["inc", "company", "holdings", "group"]
+    
+    search_url = "https://www.wikidata.org/w/api.php"
+    params = {
+        "action": "wbsearchentities",
+        "search": name,
+        "language": "en",
+        "format": "json"
+    }
+    response = requests.get(search_url, params=params).json()
+    
+    if response["search"]:
+        results = response["search"]
+        i = 0
+        
+        while i < len(results) and qid == None:
+            item = results[i]
+            desc = item.get("description", "").lower()
+            label = item.get("label", "").lower()
+            
+            if any([keyword in desc for keyword in keywords]):
+                qid = item["id"]
 
-if __name__ == "__main__":
-    print(get_aliases("alphabet"))
-    pass
+            elif any([keyword in label for keyword in company_suffixs]):
+                qid = item["id"]
+            i += 1 
+        
+        if not qid:
+            #If no keyword is found, take the first result
+            qid = response["search"][0]["id"]
+            print(f"No keyword found in {name}")
+    else:
+        print(f"{name} search not found")
+    
+    
+    return qid
+
+def get_company_industries(name: str):
+    """Get list of company's industries from wikidata
+
+    Args:
+        name (str): name of company
+
+    Returns:
+        list[str]: list of company's industries. None if company could not be found 
+    """
+    qid = get_qid(name)
+    industries = None
+    
+    if qid:
+        #get data using qid
+        entity_url = f"https://www.wikidata.org/wiki/Special:EntityData/{qid}.json"
+        entity_data = requests.get(entity_url).json()
+        entity = entity_data["entities"][qid]
+        claims = entity.get("claims", {})
+
+        #industry is claim "P452" https://www.wikidata.org/wiki/Property:P452
+        industries = []
+        if "P452" in claims:
+            for industry_claim in claims["P452"]:
+                try:
+                    industry_qid = industry_claim["mainsnak"]["datavalue"]["value"]["id"]
+                    industry_entity_url = f"https://www.wikidata.org/wiki/Special:EntityData/{industry_qid}.json"
+                    industry_entity = requests.get(industry_entity_url).json()
+                    industry_label = industry_entity["entities"][industry_qid]["labels"]["en"]["value"]
+                    industries.append(industry_label)
+                except:
+                    continue
+        
+    if industries: return industries 
+    else: return None
