@@ -1,5 +1,7 @@
 config.py
 testing.py
+#Testing 
+logo.svg
 
 backend/util/db_config.py
 backend/article_testing.py
