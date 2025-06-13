@@ -11,12 +11,16 @@ import time
 from bs4 import BeautifulSoup
 import requests
 import re
+from hashlib import md5
+
 
 # For encoding printing error (quick fix)
 import sys
 import io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
+#Append id.json to url to get entity data
+entity_url = "https://www.wikidata.org/wiki/Special:EntityData/"
 
 def get_description(company: str):
     """Scrape company description from wikipedia (first paragraph)
@@ -262,3 +266,42 @@ def get_company_industries(name: str):
         
     if industries: return industries 
     else: return None
+
+def get_company_logo(name: str):
+    """Get logo of company from wikidata
+
+    Args:
+        name (str): name of company 
+
+    Returns:
+        bytes: logo of company
+    """
+    id = get_qid(name)
+    logo = None
+    
+    if id:
+        entity_data = requests.get(entity_url + f"{id}.json").json()
+        entities = entity_data["entities"][id]
+        claims = entities.get("claims", {})
+        
+        if "P154" in claims:
+            filename = claims["P154"][0]["mainsnak"]["datavalue"]["value"]
+            url = get_commons_image_url(filename)
+        
+            res = requests.get(url)
+            logo = res.content
+            
+    return logo 
+
+def get_commons_image_url(filename):
+    """Get URL of commons.wikimedia where logo is stored
+
+    Args:
+        filename (string): name of file
+
+    Returns:
+        _type_: _description_
+    """
+    name = filename.replace(' ', '_')
+    hash_val = md5(name.encode('utf-8')).hexdigest()
+    return f"https://upload.wikimedia.org/wikipedia/commons/{hash_val[0]}/{hash_val[0:2]}/{name}"
