@@ -22,6 +22,9 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 #Append id.json to url to get entity data
 entity_url = "https://www.wikidata.org/wiki/Special:EntityData/"
 
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+}
 def get_description(company: str):
     """Scrape company description from wikipedia (first paragraph)
 
@@ -274,7 +277,7 @@ def get_company_logo(name: str):
         name (str): name of company 
 
     Returns:
-        bytes: logo of company
+        bytes: logo of company. Returns None if company not found, or wikidata does not have a logo
     """
     id = get_qid(name)
     logo = None
@@ -288,8 +291,12 @@ def get_company_logo(name: str):
             filename = claims["P154"][0]["mainsnak"]["datavalue"]["value"]
             url = get_commons_image_url(filename)
         
-            res = requests.get(url)
-            logo = res.content
+            res = requests.get(url, headers=headers)
+            if res.status_code == 200:
+                logo = res.content
+            else:
+                print(f"Failed to fetch {url}: {res.status_code}")
+                
             
     return logo 
 
