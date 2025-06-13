@@ -6,7 +6,7 @@ tables with data.
 import time
 from mysql.connector import connect, Error
 from config import db_host, db_pass, db_user, db_name
-from data_collection import get_fortune_500, get_company_description, get_company_industries
+from data_collection import get_fortune_500, get_company_description, get_company_industries, get_aliases
 
 def create_tables():
     """
@@ -53,6 +53,7 @@ def create_tables():
         print(e)
 
     return
+
 def populate_companies():
     """
     Inserts name and description of fortune 500 companies into "companies" table. 
@@ -171,11 +172,32 @@ def insert_company(name: str):
             
     return inserted 
 
+#TODO populate aliases table
+def insert_alias(name:str):
+    
+    try:
+        with connect(host=db_host, user=db_user, password=db_pass, database=db_name) as connection:
+            print(connection)
+            
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT name FROM companies WHERE name = %s", (name,))
+                #If name exists in companies table
+                if(len(cursor.fetchall()) == 1):
+                    aliases = get_aliases(name)
+                    
+                    if aliases:
+                        for alias in aliases:
+                            cursor.execute("INSERT INTO aliases (name, alias) VALUES (%s, %s)", (name, alias))
+                else:
+                    print(f"{name} could not be found in companies table")    
+            connection.commit()        
+    except Error as e:
+        print(e)
 if __name__ == "__main__":
     #Uncomment this and run script to create database. Will take 20-30 minutes    
     
     # drop_tables()
-    create_tables()
-    populate_companies()
-    populate_industries()
+    # create_tables()
+    # populate_companies()
+    # populate_industries()
     pass
