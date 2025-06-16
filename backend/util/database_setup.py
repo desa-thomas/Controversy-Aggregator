@@ -30,7 +30,8 @@ def create_tables():
                 industry varchar (150),
                 
                 PRIMARY KEY (name, industry),
-                FOREIGN KEY (name) REFERENCES companies(name)
+                FOREIGN KEY (name) REFERENCES companies(name),
+                ON DELETE CASCADE 
                 )"""
             
             aliases_query = """
@@ -39,7 +40,8 @@ def create_tables():
                 alias varchar(50),
                 
                 PRIMARY KEY (name, alias),
-                FOREIGN KEY (name) REFERENCES companies(name)
+                FOREIGN KEY (name) REFERENCES companies(name),
+                ON DELETE CASCADE
                 )"""
             
             articles_query = """
@@ -63,7 +65,8 @@ def create_tables():
                 category TEXT,
                 
                 PRIMARY KEY (id, category(255)),
-                FOREIGN KEY (id) REFERENCES articles(id))"""
+                FOREIGN KEY (id) REFERENCES articles(id)),
+                ON DELETE CASCADE"""
                 
             with connection.cursor() as cursor:
                 cursor.execute(companies_query)
@@ -177,17 +180,22 @@ def insert_company(name: str):
     desc = get_company_description(name)
     if desc:
         industries = get_company_industries(name)
+        try: 
+            website = get_company_website(name)
+        except Exception as e:
+            print(e)
         try:
             with connect(host=db_host, user=db_user, password=db_pass, database=db_name) as connection:
                 companies_query = """
-                INSERT INTO companies (name, description)
-                VALUE (%s, %s)"""
+                INSERT IGNORE INTO companies (name, description, website)
+                VALUE (%s, %s, %s)"""
                 industries_query = """
-                INSERT INTO industries (name, industry)
+                INSERT IGNORE INTO industries (name, industry)
                 VALUES (%s, %s)"""
                 
+                #Delete the rows if they exists then 
                 with connection.cursor() as cursor:
-                    cursor.execute(companies_query, (name, desc))
+                    cursor.execute(companies_query, (name, desc, website))
                     if industries:
                         for industry in industries:
                             cursor.execute(industries_query, (name, industry))

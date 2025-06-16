@@ -320,10 +320,10 @@ def get_company_website(company_name:str):
         company_name (_type_): _description_
 
     Raises:
-        Exception: _description_
+        Exception: 
 
     Returns:
-        _type_: _description_
+        str: Website, none if not found
     """    
     website = None
     id = get_qid(company_name)
