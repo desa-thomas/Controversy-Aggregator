@@ -5,7 +5,7 @@ Functions for performing CRUD operations on database.
 ... API for database
 """
 
-from article import Article
+from models import Article
 from mysql.connector import connect, Error
 from config import db_host, db_pass, db_user, db_name
 
@@ -99,15 +99,23 @@ def retrieve_industries(company:str):
     """
     pass
 
-#TODO
 def company_exists (company:str):
     """Check if company exists in database
 
     Args:
         company (str): _description_
     """
-    pass
+    exists = False
+    try:
+        with connect(host=db_host, user=db_user, password=db_pass, database=db_name) as connection:
+            print(connection)
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT name FROM companies WHERE name = %s", (company, ))
+                exists = len(cursor.fetchall()) == 1
+    except Error as e:
+        print(e)
 
+    return exists
 #TODO
 def category_count(company:str, category:str):
     """Return count of articles involving a company and a specific category
