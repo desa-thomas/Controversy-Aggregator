@@ -1,12 +1,12 @@
 """ 
 Thomas De Sa - 2025-06-07
 Utility script to create database and table structures as well as populate the
-tables with data. 
+tables with scraped company data. 
 """
 import time
 from mysql.connector import connect, Error
 from config import db_host, db_pass, db_user, db_name
-from data_collection import get_fortune_500, get_company_description, get_company_industries, get_aliases
+from data_collection import get_fortune_500, get_company_description, get_company_industries, get_aliases, get_company_website
 
 def create_tables():
     """
@@ -21,7 +21,8 @@ def create_tables():
             companies_query = """
             CREATE TABLE IF NOT EXISTS companies(
                 name varchar(50) PRIMARY KEY, 
-                description TEXT
+                description TEXT,
+                website TEXT
                 )"""
             industries_query = """
             CREATE TABLE IF NOT EXISTS industries(
@@ -41,10 +42,35 @@ def create_tables():
                 FOREIGN KEY (name) REFERENCES companies(name)
                 )"""
             
+            articles_query = """
+            CREATE TABLE IF NOT EXISTS articles(
+                id SERIAL PRIMARY KEY,
+                company_name VARCHAR(50) NOT NULL,
+                title TEXT NOT NULL, 
+                description TEXT,
+                url TEXT NOT NULL,
+                source TEXT NOT NULL,
+                published_date TIMESTAMP,
+                retrieved TIMESTAMP NOT NULL,
+                
+                FOREIGN KEY (company_name) REFERENCES companies(name),
+                UNIQUE(url(255))
+                )"""
+                
+            categories_query = """
+            CREATE TABLE IF NOT EXISTS categories(
+                id BIGINT UNSIGNED NOT NULL,
+                category TEXT,
+                
+                PRIMARY KEY (id, category(255)),
+                FOREIGN KEY (id) REFERENCES articles(id))"""
+                
             with connection.cursor() as cursor:
                 cursor.execute(companies_query)
                 cursor.execute(industries_query)
                 cursor.execute(aliases_query)
+                cursor.execute(articles_query)
+                cursor.execute(categories_query)
                 
             connection.commit()
             
@@ -172,7 +198,7 @@ def insert_company(name: str):
             
     return inserted 
 
-#TODO populate aliases table
+#TODO populate aliases table possibly...
 def insert_alias(name:str):
     
     try:
@@ -192,6 +218,42 @@ def insert_alias(name:str):
                     print(f"{name} could not be found in companies table")    
             connection.commit()        
     except Error as e:
+        print(e)
+
+def populate_websites():
+    """Populate websites of companies.
+    """
+    try:
+
+        with connect(host=db_host, user=db_user, password=db_pass, database=db_name) as connection:
+            print(connection)
+            search_query = """
+            SELECT name FROM companies WHERE website IS NULL"""
+            
+            update_query = """
+            UPDATE companies
+            SET website = %s
+            WHERE name = %s"""
+            with connection.cursor() as cursor:
+
+                cursor.execute(search_query)
+                names = [x[0] for x in cursor.fetchall()]
+                
+                for name in names:
+                    try:
+                        website = get_company_website(name)
+                        print(f"{name}: {website}")
+                        if website:
+                            cursor.execute(update_query, (website,name))
+                        
+                        time.sleep(0.5)
+                    except Exception as e:
+                        print(e)
+                        
+                connection.commit()
+
+    except Error as e:
+
         print(e)
 if __name__ == "__main__":
     #Uncomment this and run script to create database. Will take 20-30 minutes    

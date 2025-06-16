@@ -1,5 +1,5 @@
 """
-Thomas De Sa 2025-06-05
+Thomas De Sa - 2025-06-05
 
 Company data collection functions
 
@@ -312,3 +312,43 @@ def get_commons_image_url(filename):
     name = filename.replace(' ', '_')
     hash_val = md5(name.encode('utf-8')).hexdigest()
     return f"https://upload.wikimedia.org/wikipedia/commons/{hash_val[0]}/{hash_val[0:2]}/{name}"
+
+def get_company_website(company_name:str):
+    """Get a companies website using wikidata's sparql API
+
+    Args:
+        company_name (_type_): _description_
+
+    Raises:
+        Exception: _description_
+
+    Returns:
+        _type_: _description_
+    """    
+    website = None
+    id = get_qid(company_name)
+    
+    if id: 
+        query = f"""
+        SELECT ?website WHERE {{
+        wd:{id} wdt:P856 ?website.
+        }}
+        LIMIT 1
+        """
+        
+        url = "https://query.wikidata.org/sparql"
+        headers = {"Accept": "application/sparql-results+json"}
+
+        response = requests.get(url, params={"query": query}, headers=headers)
+
+        if response.ok:
+            data = response.json()
+            results = data["results"]["bindings"]
+            
+            if results:
+                website = results[0]["website"]["value"]
+            
+        else:
+            raise Exception(f"Query failed: {response.status_code}")
+
+    return website

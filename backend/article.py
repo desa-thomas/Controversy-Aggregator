@@ -5,7 +5,7 @@ GNEW DOCS: gnews.io/docs/v4
 """
 
 import requests
-import time 
+from datetime import datetime
 from ethics_categories import ETHICS_CATEGORIES
 from config import API_KEY
 
@@ -13,7 +13,7 @@ class Article:
 
     GNEWS_ENDPOINT = "https://gnews.io/api/v4/search"
     
-    def __init__(self, company: str, headline: str, url: str, source: str, categories: list[str], date_published:str, description:str, retrieved:float):
+    def __init__(self, company: str, headline: str, url: str, source: str, categories: list[str], date_published:datetime, description:str, retrieved = None):
         """Initalize Article object
 
         Args:
@@ -24,14 +24,14 @@ class Article:
             categories (list[str]): List of ethical categories that article is categorized into
             date_published (_type_): Date article was published
         """ 
-        self.company = company
+        self.company = company.capitalize()
         self.headline = headline
         self.description = description
         self.url = url
         self.source = source
         self.categories = categories
         self.date_published = date_published
-        self.retrieved = retrieved #time article was retrived from GNEWS
+        self.retrieved = retrieved
         
     def get_articles(company:str, category:str, session:requests.Session = None):
         """Static function. Get articles form GNEWS API relating to a specific company and ethical category
@@ -56,7 +56,7 @@ class Article:
         
         else: 
             #generate GNEWS API query. Doumentation here: https://gnews.io/docs/v4?python#search-endpoint
-            query = f'"{company}" AND ({category} OR {" OR ".join(ETHICS_CATEGORIES[category])})'
+            query = f'"{company}" AND ({" OR ".join(ETHICS_CATEGORIES[category])})'
             
             if not session:
                 gen = True
@@ -78,9 +78,8 @@ class Article:
                                           article["url"], 
                                           article["source"]["name"], 
                                           categories,
-                                          article["publishedAt"],
-                                          article['description'],
-                                          time.time())
+                                          datetime.fromisoformat(article["publishedAt"].replace("Z", "")),
+                                          article['description'])
                     articles.append(article_obj)
             
             if gen:
@@ -98,18 +97,23 @@ class Article:
         for category in ETHICS_CATEGORIES.keys():
             
             #if any keyword appears in description or headline
-            if any(kw for kw in ETHICS_CATEGORIES[category] if (kw.lower() in description.lower() or kw.lower() in headline.lower())) or category in description:
+            if any(kw for kw in ETHICS_CATEGORIES[category] if (kw.lower() in description.lower() or kw.lower() in headline.lower())):
                 categories.append(category)
         
         return categories
     
     def __str__(self):
-        s = f"""{"-"*15}
+        s = f"""{"-"*20}
     {self.company} - {self.categories}
     {self.source} - {self.date_published}
     {self.url}
-    **{self.headline}**
-    {self.description}
+
+    {self.headline}
+        {self.description}
         """
         
         return s 
+    
+    def __repr__(self):
+        s = f"({self.company}, {self.categories[0]}, {self.source}, {self.date_published})"
+        return s
