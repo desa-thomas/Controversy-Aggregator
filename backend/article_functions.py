@@ -14,7 +14,7 @@ from models import Article
 GNEWS_ENDPOINT = "https://gnews.io/api/v4/search"
 
     
-def get_articles(company:str, category:str, session:requests.Session = None):
+def get_articles(company:str, category:str, to:datetime = None, session:requests.Session = None):
     """Static function. Get articles form GNEWS API relating to a specific company and ethical category
 
     Args:
@@ -23,16 +23,17 @@ def get_articles(company:str, category:str, session:requests.Session = None):
         session (requests.Session, optional): Requests session. Defaults to None.
     
     return:
-        json ()
+        tuple (articles, found): returns array of article objects retrieved, and total amount of articles found on the query
     """
     category = category.lower()
     
     articles = []
+    articles_found = 0
     
     #generated session
     gen = False
     
-    if category not in ETHICS_CATEGORIES.keys() and category != "all":
+    if category not in ETHICS_CATEGORIES.keys():
         print("Invalid category")
     
     elif not company_exists(company):
@@ -41,19 +42,26 @@ def get_articles(company:str, category:str, session:requests.Session = None):
     else: 
         #generate GNEWS API query. Doumentation here: https://gnews.io/docs/v4?python#search-endpoint
         query = f'"{company}" AND ({" OR ".join(ETHICS_CATEGORIES[category])})'
-        
+        params = {
+            'q': query,
+            'lang': "en",
+            "apikey": API_KEY
+        }
+        if to:
+            params["to"] = to_iso(to)
+            
         if not session:
             gen = True
             session = requests.Session()
             
-        res = session.get(GNEWS_ENDPOINT + f'?q={query}&lang=en&apikey={API_KEY}')
+        res = session.get(GNEWS_ENDPOINT, params= params)
         
         print(f"code: {res.status_code}")
         
         if res.ok and res.json:
             json = res.json()
             articles_json = json["articles"]
-            
+            articles_found = json["totalArticles"]
             for article in articles_json:
                 categories = get_categories(article['title'], article['description'])
                 
@@ -69,7 +77,7 @@ def get_articles(company:str, category:str, session:requests.Session = None):
         if gen:
             session.close()
 
-    return articles
+    return articles, articles_found
 
 def get_categories(headline:str, description:str):
     """Get all categories for an article
@@ -86,3 +94,9 @@ def get_categories(headline:str, description:str):
     
     return categories
 
+def to_iso(date:datetime):
+    """Convert datetime obj to iso format for GNEWS"""
+    return date.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+
+#TODO Article retrieval based on paging, check database for articles, use GNEWS when necessary to update db

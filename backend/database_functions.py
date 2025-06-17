@@ -8,6 +8,7 @@ Functions for performing CRUD operations on database.
 from models import Article
 from mysql.connector import connect, Error
 from config import db_host, db_pass, db_user, db_name
+from ethics_categories import ETHICS_CATEGORIES
 
 #Create 
 def insert_article(article: Article):
@@ -43,9 +44,40 @@ def insert_article(article: Article):
     except Error as e: 
         print(e)
 
+def insert_found(company: str, category:str, found:int, update = False): 
+    """Insert the # of found articles (from GNEWS) to the db
+
+    Args:
+        company (str): Name of company      
+        category (str): Category of search
+        found (int): num of found articles
+        update (bool): whether to update value if found. ONLY UPDATE IF ARTICLE SEARCH HAD NO DATE RESTRICTION
+    """
+    if update:  
+        query = """
+        INSERT INTO found (company, category, found)
+        VALUES (%s, %s, %s)
+        ON DUPLICATE KEY UPDATE
+            found = VALUES(found)"""
+    else:
+        query = """
+        INSERT IGNORE INTO found (company, cateogry, foudn)
+        VALUES (%s, %s, %s)"""     
+    try:
+        with connect(host=db_host, user=db_user, password=db_pass, database=db_name) as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(query, (company, category, found))
+                    
+            connection.commit()
+            print(f"Inserted {company} - {category}: {found}")
+            
+    except Error as e:
+        print(e)    
+
+
 #Read
 def retrieve_articles(company:str, limit:int = None):
-    """retrieve stored articles on company
+    """retrieve articles on company from database
 
     Args:
         company (str): name of company
@@ -90,6 +122,49 @@ def retrieve_articles(company:str, limit:int = None):
     
     return articles
 
+def get_oldest_date(company: str, category:str = None):
+    """Get the date of the oldest article stored in the database (of a particular company)
+
+    Args:
+        company (str): company
+        category (str, optional): category to search for. Defaults to None.
+
+    Returns:
+        datetime: date of oldest article
+    """    
+    date = None
+    if category:
+        if category not in ETHICS_CATEGORIES.keys():
+            print(f"Invalid category: {category}")
+            return
+        query = """SELECT published_date FROM articles
+        JOIN categories ON articles.id = categories.id
+        WHERE categories.category = %s
+        ORDER BY articles.published_date ASC
+        LIMIT 1"""
+    
+    else:
+        query = """
+        SELECT published_date FROM articles 
+        ORDER BY published_date ASC
+        LIMIT 1"""
+        
+    try:
+        with connect(host=db_host, user=db_user, password=db_pass, database=db_name) as connection:
+
+            with connection.cursor() as cursor:
+                if category:
+                    cursor.execute(query, (category,))
+                else:
+                    cursor.execute(query)
+                    
+                results = cursor.fetchall()
+                date = results[0][0]
+    except Error as e:
+        print(e)
+    
+    return date
+
 #TODO
 def retrieve_industries(company:str):
     """retrive industries of a company
@@ -116,6 +191,7 @@ def company_exists (company:str):
         print(e)
 
     return exists
+
 #TODO
 def category_count(company:str, category:str):
     """Return count of articles involving a company and a specific category

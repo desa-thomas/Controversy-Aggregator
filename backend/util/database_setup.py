@@ -7,6 +7,7 @@ import time
 from mysql.connector import connect, Error
 from config import db_host, db_pass, db_user, db_name
 from data_collection import get_fortune_500, get_company_description, get_company_industries, get_aliases, get_company_website
+EC_keys = ['labor', 'environment', 'privacy', 'governance', 'diversity', 'human rights', 'consumer safety', 'animal welfare']
 
 def create_tables():
     """
@@ -30,8 +31,7 @@ def create_tables():
                 industry varchar (150),
                 
                 PRIMARY KEY (name, industry),
-                FOREIGN KEY (name) REFERENCES companies(name),
-                ON DELETE CASCADE 
+                FOREIGN KEY (name) REFERENCES companies(name) ON DELETE CASCADE
                 )"""
             
             aliases_query = """
@@ -40,8 +40,7 @@ def create_tables():
                 alias varchar(50),
                 
                 PRIMARY KEY (name, alias),
-                FOREIGN KEY (name) REFERENCES companies(name),
-                ON DELETE CASCADE
+                FOREIGN KEY (name) REFERENCES companies(name) ON DELETE CASCADE
                 )"""
             
             articles_query = """
@@ -62,18 +61,39 @@ def create_tables():
             categories_query = """
             CREATE TABLE IF NOT EXISTS categories(
                 id BIGINT UNSIGNED NOT NULL,
-                category TEXT,
+                category VARCHAR(255) NOT NULL,
                 
-                PRIMARY KEY (id, category(255)),
-                FOREIGN KEY (id) REFERENCES articles(id)),
-                ON DELETE CASCADE"""
+                PRIMARY KEY (id, category),
+                FOREIGN KEY (id) REFERENCES articles(id) ON DELETE CASCADE,
+                FOREIGN KEY (category) REFERENCES ethics_categories(category) ON DELETE CASCADE
+                )"""
+                
+            ethics_categories_query = """
+            CREATE TABLE IF NOT EXISTS ethics_categories(
+                category VARCHAR(255) NOT NULL,
+                PRIMARY KEY (category),
+                UNIQUE (category)
+                )"""
+                
+            found_query = """
+            CREATE TABLE IF NOT EXISTS found(
+                company varchar(50),
+                category varchar(255),
+                found int,
+                
+                PRIMARY KEY (company, category),
+                FOREIGN KEY (company) REFERENCES companies(name) ON DELETE CASCADE,
+                FOREIGN KEY (category) REFERENCES ethics_categories(category)
+                )"""
                 
             with connection.cursor() as cursor:
                 cursor.execute(companies_query)
+                cursor.execute(ethics_categories_query)
                 cursor.execute(industries_query)
                 cursor.execute(aliases_query)
                 cursor.execute(articles_query)
                 cursor.execute(categories_query)
+                cursor.execute(found_query)
                 
             connection.commit()
             
@@ -230,6 +250,7 @@ def insert_alias(name:str):
 
 def populate_websites():
     """Populate websites of companies.
+    Gets all companies which have a NULL website field then searchs for their website
     """
     try:
 
@@ -263,11 +284,26 @@ def populate_websites():
     except Error as e:
 
         print(e)
+
+def populate_ethics_categories():
+    try:
+        query = """
+        INSERT IGNORE INTO ethics_categories (category) VALUES (%s)"""
+        with connect(host=db_host, user=db_user, password=db_pass, database=db_name) as connection:
+            print(connection)
+            with connection.cursor() as cursor:
+                for category in EC_keys:
+                    cursor.execute(query, (category,))
+            connection.commit()
+    except Error as e:
+        print(e)
 if __name__ == "__main__":
     #Uncomment this and run script to create database. Will take 20-30 minutes    
     
     # drop_tables()
     # create_tables()
     # populate_companies()
+    # populate_websites()
     # populate_industries()
+    # populate_ethics_categories()
     pass
