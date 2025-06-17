@@ -8,7 +8,7 @@ import requests
 from datetime import datetime
 from ethics_categories import ETHICS_CATEGORIES
 from config import API_KEY
-from database_functions import company_exists
+from database_functions import company_exists, get_found
 from models import Article
 
 GNEWS_ENDPOINT = "https://gnews.io/api/v4/search"
@@ -89,7 +89,7 @@ def get_categories(headline:str, description:str):
     for category in ETHICS_CATEGORIES.keys():
         
         #if any keyword appears in description or headline
-        if any(kw for kw in ETHICS_CATEGORIES[category] if (kw.lower() in description.lower() or kw.lower() in headline.lower())):
+        if any(kw.strip('"') for kw in ETHICS_CATEGORIES[category] if (kw.lower().strip('"') in description.lower() or kw.lower().strip('"') in headline.lower())):
             categories.append(category)
     
     return categories
@@ -100,3 +100,31 @@ def to_iso(date:datetime):
 
 
 #TODO Article retrieval based on paging, check database for articles, use GNEWS when necessary to update db
+def fetch_articles(company:str, page: int, category:str = None):
+    """Wrapper for get_articles, and retrieve_articles.
+    Gets all articles for a company and category.
+    
+    Checks to see if articles are stored in database, if not
+    gets them from GNEWS API. 
+    
+    pages are in increments of 10 articles. 
+
+    Args:
+        company (str): name of company
+        page (int): page number of articles to retrieve
+    """
+    
+    #page in range
+    if page <= get_num_of_pages(company, category):
+        pass
+
+    else:
+        print("Page out of range")
+    
+    pass
+
+def get_num_of_pages(company:str, category:str=None):
+    
+    found = get_found(company, category)
+    return found//10
+
