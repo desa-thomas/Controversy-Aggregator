@@ -207,7 +207,6 @@ def get_cache_timestamp(company:str, category:str = None):
         with connection.cursor() as cursor:
             cursor.execute(query, params=params)
             results = cursor.fetchall()
-            print(results)
             if results:
                 timestamp = results[0][0]
     
@@ -283,7 +282,6 @@ def num_articles_in_db(company:str, connection, category:str = None):
 
     return num
 
-#TODO
 def get_page(company: str, page:int, category:str = None):
     """Get articles in page from database. Raises exception if page 
     is not contained in db.

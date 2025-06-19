@@ -5,7 +5,7 @@ GNEW DOCS: gnews.io/docs/v4
 """
 
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 from mysql.connector import Error
 
@@ -133,6 +133,15 @@ def fetch_articles(company:str, page: int, category:str = None):
     total_pages = calculate_pages(num_articles)
     articles = []
     
+    #If first page, check if needs cached articles need updating
+    if page == 1:
+        timestamp = get_cache_timestamp(company, category)
+        twodays = datetime.now()- timedelta(days=2)
+        if timestamp <= twodays:
+            get_and_store_articles(company, category, retrieve_old=False) #i.e., update
+        else:
+            print("Cached articles up to date")
+        
     if page <= total_pages and page > 0:
         
         #I will limit the client side so that you can only request a page at a time,
