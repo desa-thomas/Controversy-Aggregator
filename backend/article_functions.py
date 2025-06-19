@@ -6,10 +6,15 @@ GNEW DOCS: gnews.io/docs/v4
 
 import requests
 from datetime import datetime
+import time
+from mysql.connector import Error
+
+
+#Created modules
 from ethics_categories import ETHICS_CATEGORIES
 from config import API_KEY
-from database_functions import company_exists, get_found
-from models import Article
+from database_functions import *
+from models import Article, pageNotInDatabaseError, APILimitReached
 
 GNEWS_ENDPOINT = "https://gnews.io/api/v4/search"
 
@@ -22,8 +27,12 @@ def get_articles(company:str, category:str, to:datetime = None, session:requests
         category (str): Ethical category (relating to keys of ETHICAL_CATEGORIES dict. ethics_categories.py)
         session (requests.Session, optional): Requests session. Defaults to None.
     
-    return:
-        tuple (articles, found): returns array of article objects retrieved, and total amount of articles found on the query
+    Raises:
+        APILimitReached: API Limit on GNEWS Reached
+        
+    ## Return:
+        **articles** : returns array of article objects retrieved, 
+        **found**: total amount of articles found on the query
     """
     category = category.lower()
     
@@ -56,7 +65,7 @@ def get_articles(company:str, category:str, to:datetime = None, session:requests
             
         res = session.get(GNEWS_ENDPOINT, params= params)
         
-        print(f"code: {res.status_code}")
+        print(f"get_articles({company}) - code: {res.status_code}")
         
         if res.ok and res.json:
             json = res.json()
@@ -73,6 +82,8 @@ def get_articles(company:str, category:str, to:datetime = None, session:requests
                                     datetime.fromisoformat(article["publishedAt"].replace("Z", "")),
                                     article['description'])
                 articles.append(article_obj)
+        elif res.status_code == 403:
+            raise APILimitReached("API Limit Reached")
         
         if gen:
             session.close()
@@ -99,10 +110,9 @@ def to_iso(date:datetime):
     return date.strftime('%Y-%m-%dT%H:%M:%SZ')
 
 
-#TODO Article retrieval based on paging, check database for articles, use GNEWS when necessary to update db
 def fetch_articles(company:str, page: int, category:str = None):
-    """Wrapper for get_articles, and retrieve_articles.
-    Gets all articles for a company and category.
+    """High level function which combines `get_and_store_articles()` and `get_page()` to retrieve a page of articles.
+    Checks to see if page is stored in database, if not, retrieve from GNEWS.
     
     Checks to see if articles are stored in database, if not
     gets them from GNEWS API. 
@@ -112,19 +122,75 @@ def fetch_articles(company:str, page: int, category:str = None):
     Args:
         company (str): name of company
         page (int): page number of articles to retrieve
+    
+    Raises:
+        Exception: Page out of range or page number is not one greater than currently stored in db
+        
+    returns:
+        List of articles in page
     """
+    num_articles = get_found(company, category)
+    total_pages = calculate_pages(num_articles)
+    articles = []
     
-    #page in range
-    if page <= get_num_of_pages(company, category):
-        pass
-
+    if page <= total_pages and page > 0:
+        
+        #I will limit the client side so that you can only request a page at a time,
+        #so requesting once should suffice
+        while not articles:
+            try:
+                articles = get_page(company, page, category)
+                
+            except pageNotInDatabaseError as e:
+                if e.db_pages + 1 != page:
+                    raise Exception(f"Page index too large, must be 1 greater than currently available. Currently available pages: {e.db_pages}/{total_pages}")
+                    
+                get_and_store_articles(company, category, retrieve_old=True)    
+        
     else:
-        print("Page out of range")
+        raise Exception(f"Page {page} out of range for Company: {company} - Category: {category}. Total pages: {total_pages}")
     
-    pass
+    return articles
 
-def get_num_of_pages(company:str, category:str=None):
+def get_and_store_articles(company:str, category:str = None, retrieve_old:bool = False):
+    """Combines `get_articles()` and `insert_articles()` and `insert_found()` into one wrapper function
+    maintains one persistent db connection and retrieves articles from GNEWS and inserts all relevant article data into 
+    database.
+    NOTE: retrieve_old toggles whether to get older articles from GNEWS (earlier than oldest in db) or check new articles
+
+    Args:
+        company (str): name of company  
+        category (str, optional): category of articles to retrieve, if None get all. Defaults to None.
+        retrieve_old (bool, optional): whether to retrieve old articles, other wise retrieves new ones. Defaults to None.
     
-    found = get_found(company, category)
-    return found//10
-
+    Raises:
+        APILimitReached: Limit on GNEWS API Reached
+    
+    returns:
+        None
+    """
+    #Only add 'to' parameter if retrieve_old is toggled
+    to = None
+    arr = ETHICS_CATEGORIES
+    if category: arr = [category]
+    
+    try:
+        with db_connection() as connection:
+            print(connection)
+ 
+            for category in arr:
+                if retrieve_old: 
+                    to = get_oldest_date(company, connection, category)
+                
+                articles, found =  get_articles(company, category, to=to)
+                
+                insert_articles(articles, connection)
+                insert_found(company, category, found, connection)
+                time.sleep(1)
+                    
+            connection.commit()
+            
+    except Error as e:
+        print(e)
+        
+    return 
