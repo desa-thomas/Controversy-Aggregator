@@ -35,5 +35,16 @@ class Article:
         return s 
     
     def __repr__(self):
-        s = f"({self.company}, {self.categories[0]}, {self.source}, {self.date_published})"
+        s = f"({self.company}, {self.categories}, {self.source}, {self.date_published})"
         return s
+    
+
+class pageNotInDatabaseError(Exception):
+    def __init__(self, msg, db_pages):
+        super().__init__(msg)
+        self.db_pages = db_pages
+        
+class APILimitReached(Exception):
+    def __init__(self, *args):
+        super().__init__(*args)
+        
