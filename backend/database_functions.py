@@ -360,11 +360,51 @@ def row_to_article(row, cursor):
     article = Article(row[1], row[2], row[4], row[5], categories, row[6], row[3], retrieved=row[7])
 
     return article
+
+def search_company_table(search: str):
+    """Search for company in database. Returns 5 companies like search string
+
+    Args:
+        search (str): _description_
+
+    Returns:
+        list: list of company names matching search
+    """
+    names = []
+    print("")
+    search = f"{search}%"
+    with db_connection() as connection:
+        print(connection)
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT name FROM companies WHERE name LIKE %s LIMIT 5", (search, ))
+            results = cursor.fetchall()
+            if results:
+                names = [x[0] for x in results]
+    return names
+
+def get_company_data(company:str):
+    data = None
+    try:
+        with db_connection() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT * FROM companies c WHERE c.name = %s", (company, ))
+                results = cursor.fetchall()
+                if results:
+                    cursor.execute("SELECT industry FROM industries WHERE name = %s", (company, ))
+                    industries = [x[0] for x in cursor.fetchall()]
+                    data = list(results[0])
+                    data.append(industries)
     
+    except Error as e: 
+        print(e)
+    
+    return data
 #Update
 
 #Delete
 
 #util
 def calculate_pages(num_articles: int):
+    if num_articles == 0: return 0
+    
     return num_articles//10 + 1
