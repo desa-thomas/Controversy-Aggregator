@@ -1,8 +1,9 @@
 from datetime import datetime
+import json
 
 class Article:
     
-    def __init__(self, company: str, headline: str, url: str, source: str, categories: list[str], date_published:datetime, description:str, retrieved = None):
+    def __init__(self, company: str, headline: str, url: str, source: str, categories: list[str], date_published:datetime, description:str, retrieved:datetime = None):
         """Initalize Article object
 
         Args:
@@ -38,6 +39,17 @@ class Article:
         s = f"({self.company}, {self.categories}, {self.source}, {self.date_published})"
         return s
     
+    def to_json(self):
+        return {
+            "company": self.company,
+            "headline": self.headline,
+            "description": self.description,
+            "url": self.url,
+            "source": self.source,
+            "categories": self.categories,
+            "date_published": self.date_published.isoformat(),
+            "retrieved": self.retrieved.isoformat() if self.retrieved else None
+        }
 
 class pageNotInDatabaseError(Exception):
     def __init__(self, msg, db_pages):
