@@ -1,4 +1,4 @@
-"""
+F"""
 Thomas De Sa - 2025-06-04
 
 GNEW DOCS: gnews.io/docs/v4 
@@ -29,6 +29,7 @@ def get_articles(company:str, category:str, to:datetime = None, session:requests
     
     Raises:
         APILimitReached: API Limit on GNEWS Reached
+        Exception: 'Company' not in database
         
     ## Return:
         **articles** : returns array of article objects retrieved, 
@@ -46,7 +47,7 @@ def get_articles(company:str, category:str, to:datetime = None, session:requests
         print("Invalid category")
     
     elif not company_exists(company):
-        print(f"{company} not in database")
+        raise Exception(f"{company} not in database")
         
     else: 
         #generate GNEWS API query. Doumentation here: https://gnews.io/docs/v4?python#search-endpoint
@@ -125,22 +126,30 @@ def fetch_articles(company:str, page: int, category:str = None):
     
     Raises:
         Exception: Page out of range or page number is not one greater than currently stored in db
+        Exception: Company not in databse (raised from get_articles)
         
     returns:
         List of articles in page
     """
     num_articles = get_found(company, category)
+    #If found not populated in db, company articles have never been retrieved
+    if num_articles is None:
+        get_and_store_articles(company, category)
+        num_articles = get_found(company, category)
+    
     total_pages = calculate_pages(num_articles)
     articles = []
     
     #If first page, check if needs cached articles need updating
     if page == 1:
         timestamp = get_cache_timestamp(company, category)
-        twodays = datetime.now()- timedelta(days=2)
-        if timestamp <= twodays:
-            get_and_store_articles(company, category, retrieve_old=False) #i.e., update
-        else:
-            print("Cached articles up to date")
+        if timestamp:
+            twodays = datetime.now()- timedelta(days=2)
+            if timestamp <= twodays:
+                get_and_store_articles(company, category, retrieve_old=False) #i.e., update
+                
+            else:
+                print("Cached articles up to date")
         
     if page <= total_pages and page > 0:
         
@@ -154,7 +163,8 @@ def fetch_articles(company:str, page: int, category:str = None):
                 if e.db_pages + 1 != page:
                     raise Exception(f"Page index too large, must be 1 greater than currently available. Currently available pages: {e.db_pages}/{total_pages}")
                     
-                get_and_store_articles(company, category, retrieve_old=True)    
+                total_found = get_and_store_articles(company, category, retrieve_old=True)
+                if total_found == 0: return
         
     else:
         raise Exception(f"Page {page} out of range for Company: {company} - Category: {category}. Total pages: {total_pages}")
@@ -176,11 +186,12 @@ def get_and_store_articles(company:str, category:str = None, retrieve_old:bool =
         APILimitReached: Limit on GNEWS API Reached
     
     returns:
-        None
+        total_found: total number of articles found
     """
     #Only add 'to' parameter if retrieve_old is toggled
     to = None
     arr = ETHICS_CATEGORIES
+    total_found = 0
     if category: arr = [category]
     
     try:
@@ -192,7 +203,7 @@ def get_and_store_articles(company:str, category:str = None, retrieve_old:bool =
                     to = get_oldest_date(company, connection, category)
                 
                 articles, found =  get_articles(company, category, to=to)
-                
+                total_found += found
                 insert_articles(articles, connection)
                 insert_found(company, category, found, connection)
                 time.sleep(1)
@@ -202,4 +213,4 @@ def get_and_store_articles(company:str, category:str = None, retrieve_old:bool =
     except Error as e:
         print(e)
         
-    return 
+    return total_found
