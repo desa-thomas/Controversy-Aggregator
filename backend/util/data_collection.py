@@ -25,7 +25,7 @@ entity_url = "https://www.wikidata.org/wiki/Special:EntityData/"
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
 }
-def get_description(company: str):
+def get_description(company: str, id = None):
     """Scrape company description from wikipedia (first paragraph)
 
     Args:
@@ -39,7 +39,7 @@ def get_description(company: str):
 
     description = None
     status_code = None
-    url = get_wikipedia_url(company)
+    url = get_wikipedia_url(company,qid= id)
 
     if url:
         try:
@@ -85,7 +85,7 @@ def get_description(company: str):
     
     return description, status_code
 
-def get_company_description(company:str):
+def get_company_description(company:str, id = None):
     """Get a companys description from wikipedia
 
     Wrapper function of `get_description` that only returns description. Made it so I don't accidently break other stuff lol
@@ -96,10 +96,10 @@ def get_company_description(company:str):
     Returns:
         str: company description
     """
-    description, code = get_description(company)
+    description, code = get_description(company, id)
     return description
 
-def get_wikipedia_url(company_name:str, lang="en"):
+def get_wikipedia_url(company_name:str, lang="en",qid = None):
     """Get wikipedia url using wikidata api. 
     
     Uses the wikidata search api to search for the company then return is corresponding sitelink. 
@@ -113,8 +113,8 @@ def get_wikipedia_url(company_name:str, lang="en"):
         str: url to wikipedia page. None if not found
     """
     wiki_url = None
-    
-    qid = get_qid(company_name)
+    if qid is None: 
+        qid = get_qid(company_name)
     
     if qid:
         #get data using qid
@@ -235,7 +235,7 @@ def get_qid(name:str):
     
     return qid
 
-def get_company_industries(name: str):
+def get_company_industries(name: str, qid = None):
     """Get list of company's industries from wikidata
 
     Args:
@@ -244,7 +244,9 @@ def get_company_industries(name: str):
     Returns:
         list[str]: list of company's industries. None if company could not be found 
     """
-    qid = get_qid(name)
+    if qid is None:
+        qid = get_qid(name)
+        
     industries = None
     
     if qid:
@@ -270,7 +272,7 @@ def get_company_industries(name: str):
     if industries: return industries 
     else: return None
 
-def get_company_logo(name: str):
+def get_company_logo(name: str, id = None):
     """Get logo of company from wikidata
 
     Args:
@@ -279,7 +281,8 @@ def get_company_logo(name: str):
     Returns:
         bytes: logo of company. Returns None if company not found, or wikidata does not have a logo
     """
-    id = get_qid(name)
+    if not id:
+        id = get_qid(name)
     logo = None
     
     if id:
@@ -288,16 +291,30 @@ def get_company_logo(name: str):
         claims = entities.get("claims", {})
         
         if "P154" in claims:
-            filename = claims["P154"][0]["mainsnak"]["datavalue"]["value"]
-            url = get_commons_image_url(filename)
-        
-            res = requests.get(url, headers=headers)
-            if res.status_code == 200:
-                logo = res.content
-            else:
-                print(f"Failed to fetch {url}: {res.status_code}")
+            arr = claims["P154"]
+            i = 0
+            extension = ""
+            extensions = []
+            #Make sure file is an svg
+            while i < len(arr) and extension != 'svg':
+                extension = arr[i]["mainsnak"]["datavalue"]["value"][-3:].strip()
+                print(extension)
+                extensions.append(extension)
+                i+=1 
                 
+            if extensions[i-1] == "svg":                
+                filename = claims["P154"][i-1]["mainsnak"]["datavalue"]["value"]
+                print(filename)
+                url = get_commons_image_url(filename)
+
+                res = requests.get(url, headers=headers)
+                if res.status_code == 200:
+                    logo = res.content.decode("utf-8")
+                else:
+                    print(f"Failed to fetch {url}: {res.status_code}")
             
+            else:
+                print(f"Only type: {extensions} available for {name}")
     return logo 
 
 def get_commons_image_url(filename):
@@ -313,7 +330,7 @@ def get_commons_image_url(filename):
     hash_val = md5(name.encode('utf-8')).hexdigest()
     return f"https://upload.wikimedia.org/wikipedia/commons/{hash_val[0]}/{hash_val[0:2]}/{name}"
 
-def get_company_website(company_name:str):
+def get_company_website(company_name:str, id = None):
     """Get a companies website using wikidata's sparql API
 
     Args:
@@ -326,7 +343,8 @@ def get_company_website(company_name:str):
         str: Website, none if not found
     """    
     website = None
-    id = get_qid(company_name)
+    if not id:
+        id = get_qid(company_name)
     
     if id: 
         query = f"""
@@ -352,3 +370,18 @@ def get_company_website(company_name:str):
             raise Exception(f"Query failed: {response.status_code}")
 
     return website
+
+def get_name(name:str, entity_id=None):
+    new_name  = None
+    if entity_id is None: 
+        entity_id = get_qid(name) 
+
+    if entity_id:
+        # Step 2: Get full entity data
+        entity_url = f"https://www.wikidata.org/wiki/Special:EntityData/{entity_id}.json"
+        entity_data = requests.get(entity_url).json()
+        entity = entity_data["entities"][entity_id]
+        
+        new_name = entity["labels"].get("en")["value"]
+        
+    return new_name

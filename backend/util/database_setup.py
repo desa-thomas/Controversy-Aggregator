@@ -6,7 +6,7 @@ tables with scraped company data.
 import time
 from mysql.connector import connect, Error
 from config import db_host, db_pass, db_user, db_name
-from data_collection import get_fortune_500, get_company_description, get_company_industries, get_aliases, get_company_website
+from data_collection import get_fortune_500, get_company_description, get_company_industries, get_aliases, get_company_website, get_company_logo, get_name, get_qid
 EC_keys = ['labor', 'environment', 'privacy', 'governance', 'diversity', 'human rights', 'consumer safety', 'animal welfare']
 
 def create_tables():
@@ -23,7 +23,8 @@ def create_tables():
             CREATE TABLE IF NOT EXISTS companies(
                 name varchar(50) PRIMARY KEY, 
                 description TEXT,
-                website TEXT
+                website TEXT,
+                logo_svg TEXT
                 )"""
             industries_query = """
             CREATE TABLE IF NOT EXISTS industries(
@@ -54,7 +55,7 @@ def create_tables():
                 published_date TIMESTAMP,
                 retrieved TIMESTAMP NOT NULL,
                 
-                FOREIGN KEY (company_name) REFERENCES companies(name),
+                FOREIGN KEY (company_name) REFERENCES companies(name) ON DELETE CASCADE,
                 UNIQUE(url(255))
                 )"""
                 
@@ -85,6 +86,7 @@ def create_tables():
                 FOREIGN KEY (company) REFERENCES companies(name) ON DELETE CASCADE,
                 FOREIGN KEY (category) REFERENCES ethics_categories(category)
                 )"""
+                
                 
             with connection.cursor() as cursor:
                 cursor.execute(companies_query)
@@ -195,34 +197,43 @@ def insert_company(name: str):
     Args:
         name (str): name of company
     """
-    name = name.capitalize()
     inserted = False
-    desc = get_company_description(name)
-    if desc:
-        industries = get_company_industries(name)
-        try: 
-            website = get_company_website(name)
-        except Exception as e:
-            print(e)
-        try:
-            with connect(host=db_host, user=db_user, password=db_pass, database=db_name) as connection:
-                companies_query = """
-                INSERT IGNORE INTO companies (name, description, website)
-                VALUE (%s, %s, %s)"""
-                industries_query = """
-                INSERT IGNORE INTO industries (name, industry)
-                VALUES (%s, %s)"""
-                
-                #Delete the rows if they exists then 
-                with connection.cursor() as cursor:
-                    cursor.execute(companies_query, (name, desc, website))
-                    if industries:
-                        for industry in industries:
-                            cursor.execute(industries_query, (name, industry))
-                connection.commit()
+    name = name.capitalize()
+    id = get_qid(name)
+    if id:
+        desc = get_company_description(name, id)
         
-        except Error as e:
-            print(e)
+        if desc:
+            industries = get_company_industries(name, id)
+            try: 
+                website = get_company_website(name, id)
+            except Exception as e:
+                print(e)
+                
+            logo = get_company_logo(name, id)
+            
+            try:
+                with connect(host=db_host, user=db_user, password=db_pass, database=db_name) as connection:
+                    companies_query = """
+                    INSERT IGNORE INTO companies (name, description, website, logo_svg)
+                    VALUE (%s, %s, %s, %s)"""
+                    industries_query = """
+                    INSERT IGNORE INTO industries (name, industry)
+                    VALUES (%s, %s)"""
+                    
+                    #Delete the rows if they exists then 
+                    with connection.cursor() as cursor:
+                        cursor.execute(companies_query, (name, desc, website, logo))
+                        if industries:
+                            for industry in industries:
+                                cursor.execute(industries_query, (name, industry))
+                                if cursor.rowcount > 0: 
+                                    print(f"{name} - inserted")
+                                    inserted = True
+                    connection.commit()
+            
+            except Error as e:
+                print(e)
             
     return inserted 
 
@@ -297,6 +308,34 @@ def populate_ethics_categories():
             connection.commit()
     except Error as e:
         print(e)
+
+def populate_logos(): 
+    with connect(host=db_host, user=db_user, password=db_pass, database=db_name) as connection:
+        with connection.cursor() as cursor:
+            search = """
+            SELECT name FROM companies WHERE logo_svg IS NULL"""
+            update = """
+            UPDATE companies
+            SET logo_svg = %s
+            WHERE name = %s"""
+            
+            cursor.execute(search)
+            names = [x[0] for x in cursor.fetchall()]
+            for name in names:
+                logo = get_company_logo(name)
+                try:
+                    cursor.execute(update, (logo, name))
+                except Error as e:
+                    print(e)
+                if cursor.rowcount and logo:
+                    print(f"{name} - inserted")
+                else: 
+                    print(f"{name} - not inserted")
+                    
+                time.sleep(.5)
+        connection.commit()
+
+
 if __name__ == "__main__":
     #Uncomment this and run script to create database. Will take 20-30 minutes    
     
@@ -306,4 +345,6 @@ if __name__ == "__main__":
     # populate_websites()
     # populate_industries()
     # populate_ethics_categories()
+    
+    populate_logos()
     pass
