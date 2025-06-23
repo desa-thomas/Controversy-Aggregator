@@ -5,7 +5,7 @@ from database_functions import search_company_table, get_company_data, company_e
 from ethics_categories import ETHICS_CATEGORIES
 app = Flask(__name__)
 
-@app.get("/search")
+@app.get("/search") #?query
 def search_company(): 
     """Search company endpoint. 
 
@@ -26,7 +26,7 @@ def search_company():
     
     return jsonify(json) , code
 
-@app.get("/company/<string:company>")        
+@app.get("/company/<string:company>")
 def get_company(company):
     
     data = get_company_data(company)
@@ -42,8 +42,8 @@ def get_company(company):
             
     return jsonify(json), code
 
-#TODO get articles of companies. endpoint parameters: category, page
-@app.get("/articles")
+
+@app.get("/articles") #?company, page, category = none
 def get_articles():
     args = request.args
     company = args.get("company")
