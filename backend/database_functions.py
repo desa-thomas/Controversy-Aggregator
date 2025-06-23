@@ -7,7 +7,6 @@ Functions for performing CRUD operations on database.
 
 from models import Article, pageNotInDatabaseError
 from mysql.connector import connect, Error
-import mysql.connector.connection_cext
 from config import db_host, db_pass, db_user, db_name
 from ethics_categories import ETHICS_CATEGORIES
 
