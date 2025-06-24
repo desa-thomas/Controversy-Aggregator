@@ -1,14 +1,17 @@
 <!DOCTYPE html>
 <head>
-  <link rel="stylesheet" href="/frontend/styles/styles.css"/>
-  <script src="/frontend/js/homepage_script.js"></script>
+  <link rel="stylesheet" href="/frontend/styles/styles.css" />
+  <link rel="stylesheet" href="/frontend/styles/company_page.css" />
+  <script src="/frontend/js/company_script.js"></script>
   <script src="/frontend/js/search_functions.js"></script>
 </head>
 
 <body>
-  <div class="container">
-    <div> 
-      <h1 class="title">Ethics Aggregator</h1>
+  <div class="company-page-container">
+    <div class="header">
+      <div class="site-logo-container">
+        <h2 id="homepage-logo" onclick="return_to_home()">Untitled</h2>
+      </div>
       <div class="search-container">
         <div class="search-bar-container">
           <button id="search-button">
@@ -39,6 +42,37 @@
           </div>
         </div>
         <div id="results-container" class="results-container"></div>
+      </div>
+    </div>
+
+    <div class="content">
+        <div class="buttons-container">
+            <button>All</button>
+            <button>Labor</button>
+            <button>Environment</button>
+            <button>Privacy</button>
+            <button>Governance</button>
+            <button>Diversity</button>
+            <button>Human Rights</button>
+            <button>Consumer Safety</button>
+            <button>Animal Welfare</button>
+        </div>
+      <div id="company-info" class="company-info-container">
+        <div class="company-title-card">
+          <div class="title-container">
+            <h1 id="company-name"></h1>
+            <em id="industries"></em>
+            <a id="link"></a>
+          </div>
+          <div id="logo-container" class="logo-container">
+            <img id="logo" />
+          </div>
+        </div>
+
+        <hr />
+        <div class="desc-container">
+          <p id="description"></p>
+        </div>
       </div>
     </div>
   </div>
