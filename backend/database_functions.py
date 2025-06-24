@@ -371,11 +371,11 @@ def search_company_table(search: str):
     """
     names = []
     print("")
-    search = f"{search}%"
+    like = f"%{search}%"
     with db_connection() as connection:
         print(connection)
         with connection.cursor() as cursor:
-            cursor.execute("SELECT name FROM companies WHERE name LIKE %s LIMIT 5", (search, ))
+            cursor.execute("SELECT name FROM companies WHERE name LIKE %s ORDER BY LOCATE(%s, name), name LIMIT 5", (like, search))
             results = cursor.fetchall()
             if results:
                 names = [x[0] for x in results]

@@ -1,9 +1,12 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from waitress import serve
 from article_functions import fetch_articles
 from database_functions import search_company_table, get_company_data, company_exists
 from ethics_categories import ETHICS_CATEGORIES
+
 app = Flask(__name__)
+CORS(app)
 
 @app.get("/search") #?query
 def search_company(): 
