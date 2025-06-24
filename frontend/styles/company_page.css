@@ -1,0 +1,110 @@
+:root {
+    --sm-left-margin: 30px;
+    --md-left-margin: 80px;
+    --lg-left-margin: 150px;
+
+    --top-margin: 30px;
+}
+
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    height: 100px;
+    border-bottom: 1px solid black;
+    padding: var(--top-margin) var(--sm-left-margin)
+}
+
+.content {
+    padding: 0 var(--sm-left-margin); 
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width:768px) {
+
+    .header,
+    .content {
+        padding-left: var(--md-left-margin);
+    }
+}
+
+@media(min-width:1200px) {
+
+    .header,
+    .content {
+        padding-left: var(--lg-left-margin)
+    }
+}
+
+.company-page-container {
+    display: flex;
+    flex-direction: column;
+
+    min-height: 100vh;
+}
+
+.company-info-container {
+
+    /* background-color: var(--secondary-background-color); */
+    border-radius: 10px;
+    max-width: 700px;
+}
+
+#homepage-logo {
+    color: var(--primary-color);
+}
+
+#homepage-logo:hover {
+    color: var(--result-hover-color);
+}
+
+.company-title-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+}
+
+.title-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.logo-container {
+    width: max-content;
+}
+
+.logo-container img {
+    height: 70px;
+    width: auto;
+}
+
+#company-name a {
+    all: unset;
+    cursor: pointer;
+    color: var(--primary-color);
+}
+
+#company-name a:hover {
+    color: var(--result-hover-color)
+}
+
+.desc-container {
+    padding-top: 10px;
+}
+
+#industries{
+    max-width: 400px;
+}
+.buttons-container{
+    padding: 10px 0px;
+    display:flex;
+    align-items: center;
+    gap: 10px;
+}
+.buttons-container button{
+    width: 75px;
+    height: 50px;
+}

@@ -13,8 +13,10 @@ body {
 
 :root {
     --search-bar-size: 500px;
-    --primary-color: white;
+    --primary-color: black;
     --secondary-color: black;
+
+    --secondary-background-color: rgba(128, 128, 128, 0.492); 
 
     --primary-border-color: grey;
     --border-hover-color: rgb(249, 156, 172);
@@ -29,6 +31,8 @@ body {
     --left-search-padding: 10px;
 
     --search-icon-width: 30px;
+
+    --search-bar-height: 40px;
 }
 
 .title {
@@ -41,14 +45,16 @@ mark {
 
 .container {
     box-sizing: border-box;
-    padding: 10vh 10px;
+    padding: 20vh 10px;
+    padding-top: 0px;
     display: flex;
     flex-direction: column;
     gap: 10px;
     align-items: center;
-    justify-content: end;
+    justify-content: center;
 
     height: 100vh;
+    overflow-y: scroll;
 }
 
 .search-container {
@@ -69,7 +75,7 @@ mark {
 
     border: 2px solid var(--primary-border-color);
     border-radius: 10px 10px 0px 0px;
-    height: 40px;
+    height: var(--search-bar-height);
 
 }
 
@@ -143,6 +149,10 @@ mark {
 
 .results-container {
     box-sizing: border-box;
+    background-color: white;
+    position: absolute;
+    top: var(--search-bar-height);
+    z-index: 2;
 
     border-top: none;
     border-radius: 0px 0px 5px 5px;
@@ -151,7 +161,7 @@ mark {
     display: flex;
     flex-direction: column;
     width: 100%;
-    height: 300px;
+    height: calc(var(--result-height)*6);
 
     visibility: hidden;
 
@@ -184,6 +194,10 @@ mark {
 .loading {
     position: relative;
     overflow: hidden;
+    pointer-events: none;
+}
+.no-results{
+    pointer-events: none;
 }
 
 /* Light sweep effect */
