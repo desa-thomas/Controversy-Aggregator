@@ -24,7 +24,7 @@ def create_tables():
                 name varchar(50) PRIMARY KEY, 
                 description TEXT,
                 website TEXT,
-                logo_svg TEXT
+                logo_url TEXT
                 )"""
             industries_query = """
             CREATE TABLE IF NOT EXISTS industries(
@@ -313,10 +313,10 @@ def populate_logos():
     with connect(host=db_host, user=db_user, password=db_pass, database=db_name) as connection:
         with connection.cursor() as cursor:
             search = """
-            SELECT name FROM companies WHERE logo_svg IS NULL"""
+            SELECT name FROM companies WHERE logo_url IS NULL"""
             update = """
             UPDATE companies
-            SET logo_svg = %s
+            SET logo_url= %s
             WHERE name = %s"""
             
             cursor.execute(search)
