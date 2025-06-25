@@ -167,6 +167,8 @@ def fetch_articles(company:str, page: int, category:str = None):
                 if total_found == 0: return
         
     else:
+        if(total_pages == 0 ):  #nothing found in db
+            return []
         raise Exception(f"Page {page} out of range for Company: {company} - Category: {category}. Total pages: {total_pages}")
     
     return articles

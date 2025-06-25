@@ -46,7 +46,7 @@ def get_company(company):
     return jsonify(json), code
 
 
-@app.get("/articles") #?company, page, category = none
+@app.get("/articles/") #?company, page, category = none
 def get_articles():
     args = request.args
     company = args.get("company")
