@@ -10,10 +10,10 @@
   <div class="company-page-container">
     <div class="header">
       <div class="site-logo-container">
-        <h2 id="homepage-logo" onclick="return_to_home()">Untitled</h2>
+        <h2 id="homepage-logo" onclick="return_to_home()">home</h2>
       </div>
       <div class="search-container">
-        <div class="search-bar-container">
+        <div id="search-bar-container" class="search-bar-container">
           <button id="search-button">
             <svg
               focusable="false"
@@ -46,34 +46,58 @@
     </div>
 
     <div class="content">
-        <div class="buttons-container">
-            <button>All</button>
-            <button>Labor</button>
-            <button>Environment</button>
-            <button>Privacy</button>
-            <button>Governance</button>
-            <button>Diversity</button>
-            <button>Human Rights</button>
-            <button>Consumer Safety</button>
-            <button>Animal Welfare</button>
-        </div>
-      <div id="company-info" class="company-info-container">
-        <div class="company-title-card">
-          <div class="title-container">
-            <h1 id="company-name"></h1>
-            <em id="industries"></em>
-            <a id="link"></a>
-          </div>
-          <div id="logo-container" class="logo-container">
-            <img id="logo" />
-          </div>
-        </div>
+      <div class="desc-and-company">
+        <div style="width: 100%; max-width: 650px">
+          <div id="company-info" class="company-info-container">
+            <div class="company-title-card">
+              <div class="title-container">
+                <h1 id="company-name"></h1>
+                <em id="industries"></em>
+                <a target="_blank" id="link"></a>
+              </div>
+              <div id="logo-container" class="logo-container">
+                <img id="logo" />
+              </div>
+            </div>
 
-        <hr />
+            <div class="dropdown-container">
+              <button onclick="click_select_category()">Category: All</button>
+              <div id="dropdown-content" class="dropdown-content"></div>
+            </div>
+          </div>
+          <div id="articles-container" class="articles-container">
+            <div class="article-card">
+              <div class="article-info">
+                <div class="col">
+                  <em>source</em
+                  ><a
+                    href="link"
+                    target="_blank"
+                    >headline</a
+                  >
+                </div>
+                <div class="col2">
+                  <div class="source-info"><em>yyyy-mm-dd</em></div>
+                  <p>categories</p>
+                </div>
+              </div>
+              <div class="article-description">
+                <p>
+                  desc
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="desc-container">
-          <p id="description"></p>
+          <div class="desc-background">
+            <h2>Comapny Description</h2>
+            <p id="description"></p>
+          </div>
         </div>
       </div>
     </div>
+
+    <footer>Corporate News Aggregator</footer>
   </div>
 </body>

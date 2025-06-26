@@ -3,12 +3,29 @@
     padding: 0px;
     font-family: Arial, Helvetica, sans-serif;
     box-sizing: border-box;
+    color: var(--font-color)
 }
 
 html,
 body {
     width: 100vw;
     height: 100vh;
+    background-color: var(--primary-background-color);
+}
+
+a,
+a:visited {
+    text-decoration-line: none;
+    color: var(--link-color);
+}
+
+a:hover {
+    text-decoration-line: underline;
+}
+
+svg{
+    stroke: var(--font-color);
+    fill: var(--font-color);
 }
 
 :root {
@@ -16,12 +33,15 @@ body {
     --primary-color: black;
     --secondary-color: black;
 
-    --secondary-background-color: rgba(128, 128, 128, 0.492); 
+    --primary-background-color: rgb(37, 37, 37);
+    --secondary-background-color: rgb(53, 53, 53);
+
+    --font-color: white;
 
     --primary-border-color: grey;
     --border-hover-color: rgb(249, 156, 172);
 
-    --result-hover-color: rgba(255, 192, 203, 0.727);
+    --result-hover-color: rgb(255, 192, 203);
     --result-height: 60px;
 
     --highlight-color: rgba(127, 77, 255, 0.296);
@@ -33,6 +53,7 @@ body {
     --search-icon-width: 30px;
 
     --search-bar-height: 40px;
+    --link-color: rgb(111, 161, 255);
 }
 
 .title {
@@ -126,7 +147,7 @@ mark {
     align-items: center;
 }
 
-#search-button{
+#search-button {
     min-width: var(--search-icon-width);
     margin: auto;
 }
@@ -149,7 +170,7 @@ mark {
 
 .results-container {
     box-sizing: border-box;
-    background-color: white;
+    background-color: var(--secondary-background-color);
     position: absolute;
     top: var(--search-bar-height);
     z-index: 2;
@@ -161,7 +182,7 @@ mark {
     display: flex;
     flex-direction: column;
     width: 100%;
-    height: calc(var(--result-height)*6);
+    height: max-content;
 
     visibility: hidden;
 
@@ -179,7 +200,6 @@ mark {
     font-size: var(--search-font-size);
     padding: 10px var(--search-icon-width);
 
-    background: #e0e0e0b5;
     border-left: 2px solid var(--primary-border-color);
     border-right: 2px solid var(--primary-border-color);
     border-bottom: 2px solid var(--primary-border-color);
@@ -196,7 +216,8 @@ mark {
     overflow: hidden;
     pointer-events: none;
 }
-.no-results{
+
+.no-results {
     pointer-events: none;
 }
 

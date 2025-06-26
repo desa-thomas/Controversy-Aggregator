@@ -33,7 +33,8 @@ async function search_endpoint(search) {
   /**
    * Search database for company.
    */
-  const url = API_URL + `/search?query=${search}`;
+  const url = API_URL + `/search?query=${encodeURIComponent(search)}`;
+  
   try {
     const response = await fetch(url);
     if (!response.ok) {
@@ -171,7 +172,6 @@ function loader() {
   }
 
   container.childNodes.forEach((child) => {
-    console.log(child)
     child.innerHTML = "";
     child.classList.add("loading");
   });
@@ -190,5 +190,18 @@ function x_button() {
 
 function card_click(name){
   console.log(`${name} - clicked`)
-  location.replace(`${location.origin}/frontend/company/?company=${name}`)
+  const encoded = encodeURIComponent(name);
+  location.replace(`${location.origin}/frontend/company/?company=${encoded}`)
+}
+
+function click_off(event){
+  const input = document.getElementById("search-bar-container")
+  const results  = document.getElementById("results-container")
+
+  if (!input.contains(event.target) && !results.contains(event.target)){
+    results.style.visibility = "hidden"
+  }
+  else{
+    results.style.visibility = "visible"
+  }
 }
