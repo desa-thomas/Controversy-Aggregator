@@ -46,46 +46,51 @@
     </div>
 
     <div class="content">
-      <div class="desc-and-company">
-        <div style="width: 100%; max-width: 650px">
-          <div id="company-info" class="company-info-container">
-            <div class="company-title-card">
-              <div class="title-container">
-                <h1 id="company-name"></h1>
-                <em id="industries"></em>
-                <a target="_blank" id="link"></a>
-              </div>
-              <div id="logo-container" class="logo-container">
-                <img id="logo" />
-              </div>
+      <div class="col-sizing">
+        <div id="company-info" class="company-info-container">
+          <div class="company-title-card">
+            <div class="title-container">
+              <h1 id="company-name"></h1>
+              <em id="industries"></em>
+              <a target="_blank" id="link"></a>
             </div>
-
-            <div class="dropdown-container">
-              <button onclick="click_select_category()">Category: All</button>
-              <div id="dropdown-content" class="dropdown-content"></div>
+            <div id="logo-container" class="logo-container">
+              <img id="logo" />
             </div>
           </div>
-          <div id="articles-container" class="articles-container">
-            <div class="article-card">
-              <div class="article-info">
-                <div class="col">
-                  <em>source</em
-                  ><a
-                    href="link"
-                    target="_blank"
-                    >headline</a
-                  >
+
+          <div class="dropdown-container">
+            <button
+              id="category-selector-button"
+              onclick="click_select_category()"
+            >
+              All<span></span>
+            </button>
+            <div id="dropdown-content" class="dropdown-content"></div>
+          </div>
+        </div>
+      </div>
+      <div class="desc-and-company">
+        <div class="col-sizing">
+          <div>
+            <div id="articles-container" class="articles-container">
+              <div class="article-card">
+                <div class="article-info">
+                  <div class="col">
+                    <em>source</em><a href="link" target="_blank">headline</a>
+                  </div>
+                  <div class="col2">
+                    <div class="source-info"><em>yyyy-mm-dd</em></div>
+                    <p>categories</p>
+                  </div>
                 </div>
-                <div class="col2">
-                  <div class="source-info"><em>yyyy-mm-dd</em></div>
-                  <p>categories</p>
+                <div class="article-description">
+                  <p>desc</p>
                 </div>
               </div>
-              <div class="article-description">
-                <p>
-                  desc
-                </p>
-              </div>
+            </div>
+            <div class="load-more-container">
+              <div id="load-more">load more</div>
             </div>
           </div>
         </div>
