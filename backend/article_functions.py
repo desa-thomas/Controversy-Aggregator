@@ -8,7 +8,7 @@ import requests
 from datetime import datetime, timedelta
 import time
 from mysql.connector import Error
-
+import urllib.parse as up
 
 #Created modules
 from ethics_categories import ETHICS_CATEGORIES
@@ -52,10 +52,12 @@ def get_articles(company:str, category:str, to:datetime = None, session:requests
     else: 
         #generate GNEWS API query. Doumentation here: https://gnews.io/docs/v4?python#search-endpoint
         query = f'"{company}" AND ({" OR ".join(ETHICS_CATEGORIES[category])})'
+        print(query)
         params = {
             'q': query,
             'lang': "en",
-            "apikey": API_KEY
+            "apikey": API_KEY,
+            "in": "title"
         }
         if to:
             params["to"] = to_iso(to)
