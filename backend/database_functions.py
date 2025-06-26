@@ -73,7 +73,7 @@ def insert_articles(articles: list[Article], connection):
             print(f"{cursor.rowcount} rows affected")
     connection.commit()
 
-def insert_found(company: str, category:str, found:int, connection, update = False): 
+def insert_found(company: str, category:str, found:int, connection, update = True): 
     """Insert the # of found articles (from GNEWS) to the db
 
     Args:
@@ -87,7 +87,7 @@ def insert_found(company: str, category:str, found:int, connection, update = Fal
         INSERT INTO found (company, category, found)
         VALUES (%s, %s, %s)
         ON DUPLICATE KEY UPDATE
-            found = VALUES(found)"""
+            found = GREATEST(found, VALUES(found))"""
     else:
         query = """
         INSERT IGNORE INTO found (company, category, found)
@@ -259,6 +259,22 @@ def get_found(company:str, category:str = None):
     
     return found
 
+def get_all_found(company: str):
+    query = """SELECT category, found FROM found WHERE company = %s"""
+    found = None
+    try:
+        with db_connection() as connection: 
+            with connection.cursor() as cursor:
+                cursor.execute(query, (company, ))
+                results = cursor.fetchall()
+                if results:
+                    found = results
+                    found = {x[0]: x[1] for x in found}
+                    found["all"] = sum(found.values())
+    except Error as e:
+        print(e)
+
+    return found
 def num_articles_in_db(company:str, connection, category:str = None):
     num = 0
     

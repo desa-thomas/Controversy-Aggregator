@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from waitress import serve
 from article_functions import fetch_articles
-from database_functions import search_company_table, get_company_data, company_exists
+from database_functions import search_company_table, get_company_data, get_all_found
 from ethics_categories import ETHICS_CATEGORIES
 
 app = Flask(__name__)
@@ -69,12 +69,15 @@ def get_articles():
         except Exception as e:
             if str(e)[:4] == "page":
                 code = 400
+            elif str(e)[:3] == "API":
+                code = 403
             else: #company doesn't exist in db
                 code = 404
             json = {"Error": str(e)}
             
         else:
-            json = {"articles": [article.to_json() for article in articles]}
+            found = get_all_found(company)
+            json = {"articles": [article.to_json() for article in articles], "found": found}
             code = 200
     
     return jsonify(json), code

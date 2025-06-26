@@ -20,12 +20,12 @@ ETHICS_CATEGORIES = {
         "discrimination", "gender", "race", "DEI", "harassment", "bias", "equality", "inclusion"
     ],
     "human rights": [
-        '"child labor"', '"forced labor"', "genocide", "torture", "slavery", "detention", "repression", "censorship"
+        'child labor', 'forced labor', "genocide", "torture", "slavery", "detention", "repression", "censorship"
     ],
     "consumer safety": [
-        "recall", "FDA", "toxicity", "defect", "contamination", '"side effect"', '"unsafe product"'
+        "recall", "FDA", "toxicity", "defect", "contamination", 'side effect', 'unsafe product'
     ],
     "animal welfare": [
-        '"animal testing"', "cruelty", "fur", "zoo", '"factory farming"', "endangered", '"animal abuse"'
+        'animal testing', "cruelty", "fur", "zoo", 'factory farming', "endangered", 'animal abuse'
     ]
 }
