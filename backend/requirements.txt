@@ -3,3 +3,4 @@ bs4
 pymysql
 Flask
 flask-cors
+waitress
