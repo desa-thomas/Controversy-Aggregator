@@ -2,6 +2,7 @@ config.py
 testing.py
 .obsidian
 
+backup.sql
 #Testing 
 logo.svg
 logo.gif
