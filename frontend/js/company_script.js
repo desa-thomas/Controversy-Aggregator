@@ -2,7 +2,7 @@ const params = new URLSearchParams(window.location.search);
 const company = params.get("company");
 let page = params.get("page");
 let global_category = params.get("category");
-let found;
+let found = {};
 
 if (!page) {
   page = 1;
@@ -150,8 +150,9 @@ async function click_category(category) {
     const json = await get_articles();
     article_loader_off();
     populate_article_data(json);
+  } else {
+    no_articles_found();
   }
-  else{no_articles_found()}
   return;
 }
 
@@ -222,18 +223,18 @@ function populate_article_data(json) {
   articles.forEach((article, i) => {
     if (existing_cards[i]) {
       overwrite_article_card(existing_cards[i], article);
-      if (i != 9) {
-        existing_cards[i].className = "article-card";
-      }
+      existing_cards[i].className = "article-card";
     } else {
       card = create_article_card(article);
-
-      if (i == 9) {
-        card.classList.add("bottom-card");
-      }
       articles_container.appendChild(card);
     }
   });
+
+  while (articles_container.children.length > articles.length) {
+    articles_container.lastChild.remove();
+  }
+
+  articles_container.lastChild.classList.add("bottom-card");
 }
 
 /**
@@ -263,12 +264,13 @@ function create_article_card(article) {
   sourceinfo.className = "source-info";
 
   const pub_date = document.createElement("em");
-  const cate = document.createElement("p");
+  const cate_container = document.createElement("div");
+  cate_container.className = "category-container";
 
   sourceinfo.appendChild(pub_date);
 
   col2.appendChild(sourceinfo);
-  col2.appendChild(cate);
+  col2.appendChild(cate_container);
 
   article_info.appendChild(col1);
   article_info.appendChild(col2);
@@ -291,7 +293,15 @@ function create_article_card(article) {
     pub_date.textContent = new Date(article.date_published).toLocaleDateString(
       "en-CA"
     );
-    cate.textContent = article.categories.join(", ");
+    article.categories.forEach((category) => {
+      const cate = document.createElement("div");
+      cate.className = "category";
+      cate.innerHTML = category;
+      cate.style["background-color"] = `var(--${category
+        .split(" ")
+        .join("-")}-color)`;
+      cate_container.appendChild(cate);
+    });
   }
 
   return card;
@@ -310,8 +320,21 @@ function overwrite_article_card(card, article) {
   );
 
   const ps = card.getElementsByTagName("p");
-  ps[0].textContent = article.categories.join(", ");
-  ps[1].textContent = article.description;
+  ps[0].textContent = article.description;
+
+  const categories = card.getElementsByClassName("category-container");
+  categories[0].innerHTML = "";
+
+  article.categories.forEach((category) => {
+    console.log(category);
+    const cate = document.createElement("div");
+    cate.className = "category";
+    cate.innerHTML = category;
+    cate.style["background-color"] = `var(--${category
+      .split(" ")
+      .join("-")}-color)`;
+    categories[0].appendChild(cate);
+  });
 
   const a = card.getElementsByTagName("a");
 
@@ -332,7 +355,9 @@ function no_articles_found() {
       ems[1].innerHTML = "";
       const ps = card.getElementsByTagName("p");
       ps[0].innerHTML = "";
-      ps[1].innerHTML = "";
+      const cates = card.getElementsByClassName("category-container");
+      cates[0].innerHTML = "";
+
       const a = card.getElementsByTagName("a");
       a[0].href = "";
       a[0].innerHTML = "";

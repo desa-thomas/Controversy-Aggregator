@@ -61,7 +61,7 @@ def get_articles():
         code = 400
     
     elif category not in ETHICS_CATEGORIES and category is not None:
-        json = {"Error": f"Category must be one of the following: {", ".join(ETHICS_CATEGORIES.keys())} or None"}
+        json = {"Error": f"Category must be one of the following: {', '.join(ETHICS_CATEGORIES.keys())} or None"}
         code = 400
     else:
         try:
@@ -72,6 +72,7 @@ def get_articles():
             elif str(e)[:3] == "API":
                 code = 403
             else: #company doesn't exist in db
+                print(e)
                 code = 404
             json = {"Error": str(e)}
             
@@ -83,4 +84,5 @@ def get_articles():
     return jsonify(json), code
 
 if __name__ =='__main__':
-    serve(app, host = "0.0.0.0", port=8080)
+    serve(app, host = "0.0.0.0", port=8080) 
+    

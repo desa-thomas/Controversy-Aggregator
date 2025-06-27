@@ -10,6 +10,16 @@
     --article-border: 1px solid rgb(136, 134, 134);
 
     --text-hover-color: rgb(255, 199, 242);
+
+    --labor-color: rgb(255, 93, 93); 
+    --environment-color: rgb(255, 190, 69); 
+    --privacy-color: rgb(255, 255, 104);
+    --governance-color: rgb(133, 255, 133);
+    --diversity-color: rgb(132, 188, 255); 
+    --human-rights-color: indigo;
+    --consumer-safety-color: violet;
+    --animal-welfare-color: pink;
+
 }
 
 .company-page-container {
@@ -347,4 +357,15 @@ footer {
 .col-sizing {
     width: 100%;
     max-width: 650px
+}
+
+.category-container{
+    display: flex;
+    gap: 10px;
+}
+.category{
+    color:black;
+    border-radius: 50px;
+    padding: 5px 10px;
+    margin-top: 5px;
 }

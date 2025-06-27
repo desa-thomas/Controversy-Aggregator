@@ -1,5 +1,6 @@
 requests
 bs4
-mysql-connector-python
+pymysql
 Flask
 flask-cors
+waitress

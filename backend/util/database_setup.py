@@ -4,7 +4,7 @@ Utility script to create database and table structures as well as populate the
 tables with scraped company data. 
 """
 import time
-from mysql.connector import connect, Error
+from pymysql import connect, Error
 from config import db_host, db_pass, db_user, db_name
 from data_collection import get_fortune_500, get_company_description, get_company_industries, get_aliases, get_company_website, get_company_logo, get_name, get_qid
 EC_keys = ['labor', 'environment', 'privacy', 'governance', 'diversity', 'human rights', 'consumer safety', 'animal welfare']
@@ -47,7 +47,6 @@ def create_tables():
             articles_query = """
             CREATE TABLE IF NOT EXISTS articles(
                 id SERIAL PRIMARY KEY,
-                company_name VARCHAR(50) NOT NULL,
                 title TEXT NOT NULL, 
                 description TEXT,
                 url TEXT NOT NULL,
@@ -55,7 +54,6 @@ def create_tables():
                 published_date TIMESTAMP,
                 retrieved TIMESTAMP NOT NULL,
                 
-                FOREIGN KEY (company_name) REFERENCES companies(name) ON DELETE CASCADE,
                 UNIQUE(url(255))
                 )"""
                 
@@ -86,7 +84,14 @@ def create_tables():
                 FOREIGN KEY (company) REFERENCES companies(name) ON DELETE CASCADE,
                 FOREIGN KEY (category) REFERENCES ethics_categories(category)
                 )"""
-                
+            
+            articles_companies_query = """CREATE TABLE articles_companies(
+                id BIGINT UNSIGNED NOT NULL,
+                company VARCHAR(50) NOT NULL,
+                PRIMARY KEY (id, company),
+                FOREIGN KEY (id) REFERENCES articles(id) ON DELETE CASCADE,
+                FOREIGN KEY (company) REFERENCES companies(name) ON DELETE CASCADE
+                )"""
                 
             with connection.cursor() as cursor:
                 cursor.execute(companies_query)
@@ -96,6 +101,7 @@ def create_tables():
                 cursor.execute(articles_query)
                 cursor.execute(categories_query)
                 cursor.execute(found_query)
+                cursor.execute(articles_companies_query)
                 
             connection.commit()
             
@@ -340,11 +346,11 @@ if __name__ == "__main__":
     #Uncomment this and run script to create database. Will take 20-30 minutes    
     
     # drop_tables()
-    # create_tables()
+    create_tables()
     # populate_companies()
     # populate_websites()
     # populate_industries()
     # populate_ethics_categories()
     
-    populate_logos()
+    # populate_logos()
     pass
