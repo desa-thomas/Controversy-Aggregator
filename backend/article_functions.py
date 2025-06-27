@@ -7,7 +7,7 @@ GNEW DOCS: gnews.io/docs/v4
 import requests
 from datetime import datetime, timedelta
 import time
-from mysql.connector import Error
+from pymysql import Error
 import urllib.parse as up
 
 #Created modules

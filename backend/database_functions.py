@@ -6,7 +6,7 @@ Functions for performing CRUD operations on database.
 """
 
 from models import Article, pageNotInDatabaseError
-from mysql.connector import connect, Error
+from pymysql import connect, Error
 from config import db_host, db_pass, db_user, db_name
 from ethics_categories import ETHICS_CATEGORIES
 
@@ -235,7 +235,7 @@ def get_cache_timestamp(company: str, category: str = None):
             params = (company, category)
 
         with connection.cursor() as cursor:
-            cursor.execute(query, params=params)
+            cursor.execute(query, params)
             results = cursor.fetchall()
             if results:
                 timestamp = results[0][0]
