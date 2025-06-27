@@ -4,7 +4,7 @@ Utility script to create database and table structures as well as populate the
 tables with scraped company data. 
 """
 import time
-from mysql.connector import connect, Error
+from pymysql import connect, Error
 from config import db_host, db_pass, db_user, db_name
 from data_collection import get_fortune_500, get_company_description, get_company_industries, get_aliases, get_company_website, get_company_logo, get_name, get_qid
 EC_keys = ['labor', 'environment', 'privacy', 'governance', 'diversity', 'human rights', 'consumer safety', 'animal welfare']
