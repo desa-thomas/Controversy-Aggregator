@@ -72,6 +72,7 @@ def get_articles():
             elif str(e)[:3] == "API":
                 code = 403
             else: #company doesn't exist in db
+                print(e)
                 code = 404
             json = {"Error": str(e)}
             
