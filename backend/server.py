@@ -61,7 +61,7 @@ def get_articles():
         code = 400
     
     elif category not in ETHICS_CATEGORIES and category is not None:
-        json = {"Error": f"Category must be one of the following: {", ".join(ETHICS_CATEGORIES.keys())} or None"}
+        json = {"Error": f"Category must be one of the following: {', '.join(ETHICS_CATEGORIES.keys())} or None"}
         code = 400
     else:
         try:
