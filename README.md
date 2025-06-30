@@ -21,7 +21,7 @@
 
 The app retrieves:
 - Company metadata (industry, logo, description) from Wikidata
-- Relevant news articles from GNews based on [ethical categories](/backend/ETHICS_CATEGORIES.PY) 
+- Relevant news articles from GNews based on [ethical categories](/backend/ethics_categories.py) 
 
 This tool offers a convenient platform for:
 
