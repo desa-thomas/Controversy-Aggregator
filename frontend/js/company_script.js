@@ -32,17 +32,15 @@ window.onload = async () => {
     populate_data(json);
 
     const articles_json = await get_articles();
-    article_loader_off();
     if (articles_json) {
       found = articles_json.found;
-      if(articles_json.articles.length != 0 ){
+      if (articles_json.articles.length != 0) {
         populate_article_data(articles_json);
+      } else {
+        no_articles_found();
       }
-      else{
-        no_articles_found()
-      }
-      
     }
+    article_loader_off();
   }
 
   const searchBar = document.getElementById("search-bar");
@@ -97,6 +95,10 @@ function populate_data(json) {
 
   if (json.logo) {
     document.getElementById("logo").src = json.logo;
+    document.getElementById("logo-container").classList.add("yes-img");
+  } else {
+    console.log("no logo");
+    document.getElementById("logo-container").classList.add("no-img");
   }
 
   document.getElementById("company-name").textContent = json.name;

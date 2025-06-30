@@ -38,10 +38,10 @@ svg{
 
     --font-color: white;
 
-    --primary-border-color: grey;
-    --border-hover-color: rgb(249, 156, 172);
+    --primary-border-color: rgb(73, 73, 73);
+    --border-hover-color: rgb(128, 255, 227);
 
-    --result-hover-color: rgb(255, 192, 203);
+    --result-hover-color: rgb(0, 105, 82);
     --result-height: 60px;
 
     --highlight-color: rgba(127, 77, 255, 0.296);
