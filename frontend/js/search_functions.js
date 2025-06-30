@@ -1,6 +1,7 @@
 
 // CHANGE THIS LATER
-const API_URL = "http://dietpi.local:8080";
+// const API_URL = "http://dietpi.local:8080";
+ const API_URL = "http://localhost:5000"
 console.log(API_URL)
 
 async function searchBarInput() {
