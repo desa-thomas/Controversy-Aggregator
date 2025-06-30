@@ -28,6 +28,8 @@ This tool offers a convenient platform for:
 - Researching corporate business practices
 - Exploring industry-specific media coverage through an ethical lens
 
+The frontend, built with JavaScript and HTML, is hosted on GitHub, while the backend — powered by Python (Flask) and MariaDB — runs on my Raspberry Pi at home.
+
 🚧 _Note:_ The frontend and API are still under active development. Once stable, the app will be hosted publicly. In the meantime, you're welcome to:
 
 - Browse the codebase
@@ -42,6 +44,8 @@ This tool offers a convenient platform for:
 <img height="32" width="32" src="https://cdn.simpleicons.org/javascript" /> 
 <img height="32" width="32" src="https://cdn.simpleicons.org/python" />
 <img height="32" width="32" src="https://cdn.simpleicons.org/flask/black/white" />
+<img height="32" width="32" src="https://cdn.simpleicons.org/mariadb" />
+<img height="32" width="32" src="https://cdn.simpleicons.org/raspberrypi" />
 </div>
 And [GNews's](https://gnews.io/) API
 
