@@ -152,7 +152,9 @@ def fetch_articles(company:str, page: int, category:str = None):
                 
             else:
                 print("Cached articles up to date")
-        
+        #No timestamp means articles have not been retrieved
+        else:
+            get_and_store_articles(company, category, retrieve_old=False)
     if page <= total_pages and page > 0:
         
         #I will limit the client side so that you can only request a page at a time,

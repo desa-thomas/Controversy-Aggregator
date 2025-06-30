@@ -97,14 +97,17 @@ def insert_found(company: str, category: str, found: int, connection, update=Tru
     """
     if update:
         query = """
-        INSERT INTO found (company, category, found)
-        VALUES (%s, %s, %s)
+        INSERT INTO found (company, category, found, cache_time)
+        VALUES (%s, %s, %s, NOW())
         ON DUPLICATE KEY UPDATE
-            found = GREATEST(found, VALUES(found))"""
+            found = GREATEST(found, VALUES(found)),
+            cache_time = NOW()"""
     else:
         query = """
-        INSERT IGNORE INTO found (company, category, found)
-        VALUES (%s, %s, %s)"""
+        INSERT INTO found (company, category, found, cache_time)
+        VALUES (%s, %s, %s, NOW())  
+        ON DUPLICATE KEY UPDATE
+            cache_time = NOW()"""
 
     with connection.cursor() as cursor:
         cursor.execute(query, (company, category, found))
@@ -214,32 +217,22 @@ def get_oldest_date(company: str, connection, category: str = None):
 
 def get_cache_timestamp(company: str, category: str = None):
     timestamp = None
-    with db_connection() as connection:
-        print(connection)
-        if not category:
-            query = """
-            SELECT retrieved 
-            FROM articles a
-            JOIN articles_companies ac ON ac.id = a.id
-            WHERE company = %s 
-            ORDER BY retrieved DESC LIMIT 1"""
-            params = (company, )
-        else:
-            query = """
-            SELECT retrieved 
-            FROM articles a 
-            JOIN categories c ON a.id = c.id 
-            JOIN articles_companies ac ON ac.id = a.id
-            WHERE company = %s AND category = %s 
-            ORDER BY retrieved DESC LIMIT 1"""
-            params = (company, category)
-
-        with connection.cursor() as cursor:
-            cursor.execute(query, params)
-            results = cursor.fetchall()
-            if results:
-                timestamp = results[0][0]
-
+    try: 
+        with db_connection() as connection:
+            if category is None: 
+                query = """SELECT cache_time FROM found WHERE company = %s ORDER BY cache_time DESC LIMIT 1"""
+                params=(company, )
+            else:
+                query = """SELECT cache_time FROM found WHERE company = %s AND category = %s """
+                params = (company, category)
+            
+            with connection.cursor() as cursor: 
+                cursor.execute(query, params)
+                results = cursor.fetchall()
+                if results:
+                    timestamp = results[0][0]   
+    except Error as e: 
+        print(e)
     return timestamp
 
 

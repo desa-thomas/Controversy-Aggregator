@@ -79,6 +79,7 @@ def create_tables():
                 company varchar(50),
                 category varchar(255),
                 found int,
+                cache_time TIMESTAMP,
                 
                 PRIMARY KEY (company, category),
                 FOREIGN KEY (company) REFERENCES companies(name) ON DELETE CASCADE,
