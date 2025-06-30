@@ -33,14 +33,16 @@ window.onload = async () => {
 
     const articles_json = await get_articles();
     article_loader_off();
-    if (articles_json) found = articles_json.found;
-
-    if (articles_json & articles_json.articles)
-      populate_article_data(articles_json);
-
-    else if (articles_json) no_articles_found();
-
-    found = articles_json.found;
+    if (articles_json) {
+      found = articles_json.found;
+      if(articles_json.articles.length != 0 ){
+        populate_article_data(articles_json);
+      }
+      else{
+        no_articles_found()
+      }
+      
+    }
   }
 
   const searchBar = document.getElementById("search-bar");
@@ -354,13 +356,15 @@ function overwrite_article_card(card, article) {
 function no_articles_found() {
   const articles_container = document.getElementById("articles-container");
   const existing_cards = Array.from(articles_container.children);
-  const s = `No articles found for ${company}`
+  const s = `No articles found for ${company}`;
 
   existing_cards.forEach((card, i) => {
     if (i == 0) {
       card.classList.add("bottom-card");
       const ems = card.getElementsByTagName("em");
-      ems[0].innerHTML = global_category ? `No '${global_category}' articles for ${company}`: s;
+      ems[0].innerHTML = global_category
+        ? `No '${global_category}' articles for ${company}`
+        : s;
       ems[1].innerHTML = "";
       const ps = card.getElementsByTagName("p");
       ps[0].innerHTML = "";
