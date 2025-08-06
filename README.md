@@ -28,9 +28,9 @@ This tool offers a convenient platform for:
 - Researching corporate business practices
 - Exploring industry-specific media coverage through an ethical lens
 
-The frontend, built with JavaScript and HTML, is hosted on GitHub, while the backend — powered by Python (Flask) and MariaDB — runs on my Raspberry Pi at home.
+The frontend, built with JavaScript and HTML, is hosted on GitHub, while the backend — powered by Python (Flask) and MariaDB — runs on my Raspberry Pi at home (port has not been forwarded at the moment).
 
-🚧 _Note:_ The frontend and API are still under active development. Once stable, the app will be hosted publicly. In the meantime, you're welcome to:
+_Note:_ Although the web app is not publically hosted at the moment, feel free to: 
 
 - Browse the codebase
 - View [screenshots](/screenshots)
